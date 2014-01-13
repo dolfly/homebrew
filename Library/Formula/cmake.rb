@@ -1,8 +1,16 @@
 require 'formula'
 
 class NoExpatFramework < Requirement
+  def expat_framework
+    '/Library/Frameworks/expat.framework'
+  end
+
+  satisfy :build_env => false do
+    not File.exist? expat_framework
+  end
+
   def message; <<-EOS.undent
-    Detected /Library/Frameworks/expat.framework
+    Detected #{expat_framework}
 
     This will be picked up by CMake's build system and likely cause the
     build to fail, trying to link to a 32-bit version of expat.
@@ -10,24 +18,24 @@ class NoExpatFramework < Requirement
     You may need to move this file out of the way to compile CMake.
     EOS
   end
-  def satisfied?
-    not File.exist? "/Library/Frameworks/expat.framework"
-  end
 end
-
 
 class Cmake < Formula
   homepage 'http://www.cmake.org/'
-  url 'http://www.cmake.org/files/v2.8/cmake-2.8.10.1.tar.gz'
-  sha1 'ff536d0592a0433ef3610f1861886712b99979a5'
+  url 'http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz'
+  sha1 '5661a607acbce7c16bb5f15ff2895fa5ca53a4da'
+
+  head 'http://cmake.org/cmake.git'
 
   bottle do
-    sha1 '1a43a9a7f05216c9dc2458bca6aaa80c4a6cfc5b' => :mountainlion
-    sha1 '31856bbd662ca47c325761fc7040e43f9a635c64' => :lion
-    sha1 'ff80d9bb064fcec2e268896ede95532f99c6cfb6' => :snowleopard
+    cellar :any
+    revision 1
+    sha1 '6a4c11225de1e0f1184f2391dc6806a54ef07576' => :mavericks
+    sha1 '4e3891ec5fec6fd5e8867c9225ba6997e81cabd3' => :mountain_lion
+    sha1 '978a056dd68407bec5985e83e512dfc19adbabd8' => :lion
   end
 
-  depends_on NoExpatFramework.new
+  depends_on NoExpatFramework
 
   def install
     args = %W[
@@ -44,7 +52,8 @@ class Cmake < Formula
     system "make install"
   end
 
-  def test
-    system "#{bin}/cmake", "-E", "echo", "testing"
+  test do
+    (testpath/'CMakeLists.txt').write('find_package(Ruby)')
+    system "#{bin}/cmake", '.'
   end
 end

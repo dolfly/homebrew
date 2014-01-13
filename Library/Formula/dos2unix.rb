@@ -2,8 +2,8 @@ require 'formula'
 
 class Dos2unix < Formula
   homepage 'http://waterlan.home.xs4all.nl/dos2unix.html'
-  url 'http://waterlan.home.xs4all.nl/dos2unix/dos2unix-6.0.2.tar.gz'
-  sha1 '270a07b281ce293414641221623a5c4fc9540252'
+  url 'http://waterlan.home.xs4all.nl/dos2unix/dos2unix-6.0.4.tar.gz'
+  sha1 '93d73148c09908a42dcbf5339312c9aa1f18ba7c'
 
   depends_on 'gettext'
 

@@ -2,11 +2,10 @@ require 'formula'
 
 class Rabbitmq < Formula
   homepage 'http://www.rabbitmq.com'
-  url 'http://www.rabbitmq.com/releases/rabbitmq-server/v3.0.0/rabbitmq-server-generic-unix-3.0.0.tar.gz'
-  sha1 'a899199afe0bda17676f359789e0fea4ba8caea9'
+  url 'http://www.rabbitmq.com/releases/rabbitmq-server/v3.2.2/rabbitmq-server-mac-standalone-3.2.2.tar.gz'
+  sha1 'a0724ea36b296dd003970ea1dca6447e4287d98f'
 
-  depends_on 'erlang'
-  depends_on 'simplejson' => :python if MacOS.version == :leopard
+  depends_on 'simplejson' => :python if MacOS.version <= :leopard
 
   def install
     # Install the base files
@@ -16,33 +15,37 @@ class Rabbitmq < Formula
     (var+'lib/rabbitmq').mkpath
     (var+'log/rabbitmq').mkpath
 
-    # Replace the SYS_PREFIX for things like rabbitmq-plugins
-    inreplace (sbin + 'rabbitmq-defaults'), 'SYS_PREFIX=${RABBITMQ_HOME}', "SYS_PREFIX=#{HOMEBREW_PREFIX}"
+    # Correct SYS_PREFIX for things like rabbitmq-plugins
+    inreplace sbin/'rabbitmq-defaults' do |s|
+      s.gsub! 'SYS_PREFIX=${RABBITMQ_HOME}', "SYS_PREFIX=#{HOMEBREW_PREFIX}"
+      s.gsub! 'CLEAN_BOOT_FILE="${SYS_PREFIX}', "CLEAN_BOOT_FILE=\"#{prefix}"
+      s.gsub! 'SASL_BOOT_FILE="${SYS_PREFIX}', "SASL_BOOT_FILE=\"#{prefix}"
+    end
 
-    # Set the RABBITMQ_HOME in rabbitmq-env
+    # Set RABBITMQ_HOME in rabbitmq-env
     inreplace (sbin + 'rabbitmq-env'), 'RABBITMQ_HOME="${SCRIPT_DIR}/.."', "RABBITMQ_HOME=#{prefix}"
 
     # Create the rabbitmq-env.conf file
     rabbitmq_env_conf = etc+'rabbitmq/rabbitmq-env.conf'
     rabbitmq_env_conf.write rabbitmq_env unless rabbitmq_env_conf.exist?
 
-    # Enable the management web UI
+    # Enable plugins - management web UI and visualiser; STOMP, MQTT, AMQP 1.0 protocols
     enabled_plugins_path = etc+'rabbitmq/enabled_plugins'
-    enabled_plugins_path.write enabled_plugins unless enabled_plugins_path.exist?
+    enabled_plugins_path.write '[rabbitmq_management,rabbitmq_management_visualiser,rabbitmq_stomp,rabbitmq_amqp1_0,rabbitmq_mqtt].' unless enabled_plugins_path.exist?
 
-    # Extract rabbitmqadmin to sbin
-    system "/usr/bin/unzip", "-qq", "-j", "#{prefix}/plugins/rabbitmq_management-#{version}.ez", "rabbitmq_management-#{version}/priv/www/cli/rabbitmqadmin"
+    # Extract rabbitmqadmin and install to sbin
+    # use it to generate, then install the bash completion file
+    system "/usr/bin/unzip", "-qq", "-j",
+           "#{prefix}/plugins/rabbitmq_management-#{version}.ez",
+           "rabbitmq_management-#{version}/priv/www/cli/rabbitmqadmin"
+
     sbin.install 'rabbitmqadmin'
-
+    (sbin/'rabbitmqadmin').chmod 0755
+    (bash_completion/'rabbitmqadmin.bash').write `#{sbin}/rabbitmqadmin --bash-completion`
   end
 
   def caveats; <<-EOS.undent
     Management Plugin enabled by default at http://localhost:15672
-    EOS
-  end
-
-  def enabled_plugins; <<-EOS.undent
-      [rabbitmq_management,rabbitmq_management_visualiser].
     EOS
   end
 
@@ -67,8 +70,6 @@ class Rabbitmq < Formula
         <string>#{opt_prefix}/sbin/rabbitmq-server</string>
         <key>RunAtLoad</key>
         <true/>
-        <key>UserName</key>
-        <string>#{`whoami`.chomp}</string>
         <key>EnvironmentVariables</key>
         <dict>
           <!-- need erl in the path -->

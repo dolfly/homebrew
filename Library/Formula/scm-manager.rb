@@ -1,19 +1,17 @@
 require 'formula'
 
-class ScmManagerCliClient < Formula
-  homepage 'http://www.scm-manager.org'
-  url 'http://maven.scm-manager.org/nexus/content/repositories/releases/sonia/scm/clients/scm-cli-client/1.22/scm-cli-client-1.22-jar-with-dependencies.jar'
-  version '1.22'
-  sha1 '04fdd29dc42411da690e7c7157679a1679ba0818'
-end
-
 class ScmManager < Formula
   homepage 'http://www.scm-manager.org'
-  url 'http://maven.scm-manager.org/nexus/content/repositories/releases/sonia/scm/scm-server/1.22/scm-server-1.22-app.tar.gz'
-  version '1.22'
-  sha1 'c8ce68bf1664308d5931202ec3db9334a4d0112b'
+  url 'http://maven.scm-manager.org/nexus/content/repositories/releases/sonia/scm/scm-server/1.35/scm-server-1.35-app.tar.gz'
+  version '1.35'
+  sha1 '9ae7168e3f312dbf75d5ade278dfa0c8176e8dd0'
 
   skip_clean 'libexec/var/log'
+
+  resource 'client' do
+    url 'http://maven.scm-manager.org/nexus/content/repositories/releases/sonia/scm/clients/scm-cli-client/1.35/scm-cli-client-1.35-jar-with-dependencies.jar'
+    sha1 '4695829eb4241ef937fe1b98f016a866c3d3e045'
+  end
 
   def install
     rm_rf Dir['bin/*.bat']
@@ -24,12 +22,13 @@ class ScmManager < Formula
       #!/bin/bash
       BASEDIR="#{libexec}"
       REPO="#{libexec}/lib"
+      export JAVA_HOME=$(/usr/libexec/java_home -v 1.6)
       "#{libexec}/bin/scm-server" "$@"
     EOS
     chmod 0755, bin/'scm-server'
 
     tools = libexec/'tools'
-    ScmManagerCliClient.new.brew { tools.install Dir['*'] }
+    tools.install resource('client')
 
     scmCliClient = bin+'scm-cli-client'
     scmCliClient.write <<-EOS.undent

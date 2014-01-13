@@ -1,9 +1,9 @@
 require 'formula'
 
 class Riemann < Formula
-  homepage 'http://aphyr.github.com/riemann/'
-  url 'http://aphyr.com/riemann/riemann-0.1.5.tar.bz2'
-  sha1 '1146827d112e74c1ff7f72d0049ba8fea6887749'
+  homepage 'http://riemann.io'
+  url 'http://aphyr.com/riemann/riemann-0.2.4.tar.bz2'
+  sha1 '465965eb1c82f65872b85e685c44111a9af9f794'
 
   def shim_script
     <<-EOS.undent

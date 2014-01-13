@@ -19,17 +19,7 @@ class Pyexiv2 < Formula
 
     # let's install manually
     mv 'build/libexiv2python.dylib', 'build/libexiv2python.so'
-    (lib + which_python + 'site-packages').install 'build/libexiv2python.so', 'src/pyexiv2'
-  end
-
-  def which_python
-    "python" + `python -c 'import sys;print(sys.version[:3])'`.strip
-  end
-
-  def caveats; <<-EOS.undent
-    For non-homebrew Python, you need to amend your PYTHONPATH like so:
-      export PYTHONPATH=#{HOMEBREW_PREFIX}/lib/#{which_python}/site-packages:$PYTHONPATH
-    EOS
+    (lib+'python2.7/site-packages').install 'build/libexiv2python.so', 'src/pyexiv2'
   end
 end
 

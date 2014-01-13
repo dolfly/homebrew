@@ -2,12 +2,13 @@ require 'formula'
 
 class Monetdb < Formula
   homepage 'http://www.monetdb.org/'
-  url 'http://dev.monetdb.org/downloads/sources/Oct2012-SP1/MonetDB-11.13.5.tar.bz2'
-  sha1 'bf2d37cc4bb5a623a9fba65bc426ba38a525c808'
+  url 'http://dev.monetdb.org/downloads/sources/Feb2013-SP6/MonetDB-11.15.19.zip'
+  sha1 '2c90f4b0a02958a933f9386ac980833a50418310'
 
   head 'http://dev.monetdb.org/hg/MonetDB', :using => :hg
 
   depends_on 'pkg-config' => :build
+  depends_on :ant
   depends_on 'pcre'
   depends_on 'readline' # Compilation fails with libedit.
 

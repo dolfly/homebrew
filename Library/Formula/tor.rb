@@ -2,13 +2,29 @@ require 'formula'
 
 class Tor < Formula
   homepage 'https://www.torproject.org/'
-  url 'https://www.torproject.org/dist/tor-0.2.2.39.tar.gz'
-  sha1 'cc5021a7656c0cd22de42da9f0ce7335026852bf'
+  url 'https://www.torproject.org/dist/tor-0.2.4.20.tar.gz'
+  sha1 '09ba4eda9a73c46852a277b721ed74c8263e8dba'
+
+  devel do
+    url 'https://www.torproject.org/dist/tor-0.2.5.1-alpha.tar.gz'
+    version '0.2.5.1-alpha'
+    sha1 'd10cb78e6a41657d970a1ce42105142bcfc315fb'
+  end
+
+  option "with-brewed-openssl", "Build with Homebrew's OpenSSL instead of the system version" if MacOS.version > :leopard
 
   depends_on 'libevent'
+  depends_on 'openssl' if build.with?('brewed-openssl') || MacOS.version < :snow_leopard
 
   def install
-    system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
+    args = %W[
+      --disable-dependency-tracking
+      --prefix=#{prefix}
+    ]
+
+    args << "-with-ssl=#{Formulary.factory('openssl').opt_prefix}" if build.with?('brewed-openssl') || MacOS.version < :snow_leopard
+
+    system "./configure", *args
     system "make install"
   end
 
@@ -23,8 +39,6 @@ class Tor < Formula
         <true/>
         <key>KeepAlive</key>
         <true/>
-        <key>UserName</key>
-        <string>#{`whoami`.chomp}</string>
         <key>ProgramArguments</key>
         <array>
             <string>#{opt_prefix}/bin/tor</string>

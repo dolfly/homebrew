@@ -2,22 +2,27 @@ require 'formula'
 
 class Parrot < Formula
   homepage 'http://www.parrot.org/'
-  url 'ftp://ftp.parrot.org/pub/parrot/releases/supported/4.9.0/parrot-4.9.0.tar.bz2'
-  sha256 '638cba16b47bd5c6dfb4c9106f17961b0496d65c321279a16032ef6667d3ae4d'
+  url 'ftp://ftp.parrot.org/pub/parrot/releases/supported/5.9.0/parrot-5.9.0.tar.bz2'
+  sha256 'b4704231d90ddec827f45f945b9ad13dd4f9dc7cc9bc0cfc97ab6e30ec1c38ca'
 
   devel do
-    url 'ftp://ftp.parrot.org/pub/parrot/releases/devel/4.10.0/parrot-4.10.0.tar.bz2'
-    sha256 '7d6a592c386d25bcee429a269cc571ae81c5c080b15d14a884401a27fe3f5d4b'
+    url 'ftp://ftp.parrot.org/pub/parrot/releases/devel/5.10.0/parrot-5.10.0.tar.bz2'
+    sha256 '6030f72adccdb577a8e781e3d81c52dc60d68c6a9e2be626db3cff69e1f36ce5'
   end
 
   head 'https://github.com/parrot/parrot.git'
 
+  conflicts_with 'rakudo-star'
+
   depends_on 'gmp' => :optional
   depends_on 'icu4c' => :optional
   depends_on 'pcre' => :optional
+  depends_on 'readline' => :optional
+  depends_on 'libffi' => :optional
 
   def install
     system "perl", "Configure.pl", "--prefix=#{prefix}",
+                                   "--mandir=#{man}",
                                    "--debugging=0",
                                    "--cc=#{ENV.cc}"
 

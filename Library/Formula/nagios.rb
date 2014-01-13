@@ -2,8 +2,8 @@ require 'formula'
 
 class Nagios < Formula
   homepage 'http://www.nagios.org/'
-  url 'http://downloads.sourceforge.net/project/nagios/nagios-3.x/nagios-3.4.3/nagios-3.4.3.tar.gz'
-  sha1 '3e9b73b9e219829ec4dca6ffe44106401d430ad3'
+  url 'http://downloads.sourceforge.net/project/nagios/nagios-3.x/nagios-3.5.1/nagios-3.5.1.tar.gz'
+  sha1 '486fd6c75db47000b96d6eebb1654c30d5e9bc72'
 
   depends_on 'gd'
   depends_on 'nagios-plugins'
@@ -38,10 +38,10 @@ class Nagios < Formula
     # Install config
     system "make install-config"
     system "make install-webconf"
-    mkdir HOMEBREW_PREFIX+'var/lib/nagios/rw' unless File.exists? HOMEBREW_PREFIX+'var/lib/nagios/rw'
+    mkdir HOMEBREW_PREFIX+'var/lib/nagios/rw' unless File.exist? HOMEBREW_PREFIX+'var/lib/nagios/rw'
   end
 
-  plist_options :startup => true, :manual => "nagios #{HOMEBREW_PREFIX}/etc/nagios.cfg"
+  plist_options :startup => true, :manual => "nagios #{HOMEBREW_PREFIX}/etc/nagios/nagios.cfg"
 
   def plist; <<-EOS.undent
     <?xml version="1.0" encoding="UTF-8"?>
@@ -63,8 +63,6 @@ class Nagios < Formula
             <string>/dev/null</string>
             <key>StandardOutPath</key>
             <string>/dev/null</string>
-            <key>UserName</key>
-            <string>#{user}</string>
     </dict>
     </plist>
     EOS

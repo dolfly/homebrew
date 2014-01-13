@@ -2,8 +2,8 @@ require 'formula'
 
 class Freediameter < Formula
   homepage 'http://www.freediameter.net'
-  url 'http://www.freediameter.net/hg/freeDiameter/archive/1.1.5.tar.gz'
-  sha1 'bcbda1683f2d502506478c9916313b25dc73a714'
+  url 'http://www.freediameter.net/hg/freeDiameter/archive/1.2.0.tar.gz'
+  sha1 '687bd9d551eb4261c3600fcbe35ea519b711e9f7'
 
   head 'http://www.freediameter.net/hg/freeDiameter', :using => :hg
 
@@ -38,7 +38,7 @@ class Freediameter < Formula
 
     prefix.install 'doc', 'contrib'
 
-    unless File.exists?(etc/'freeDiameter.conf')
+    unless File.exist?(etc/'freeDiameter.conf')
       cp prefix/'doc/freediameter.conf.sample', etc/'freeDiameter.conf'
     end
 
