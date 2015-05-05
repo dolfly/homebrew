@@ -1,18 +1,16 @@
-require "formula"
 require "language/haskell"
 
 class Shellcheck < Formula
   include Language::Haskell::Cabal
 
   homepage "http://www.shellcheck.net"
-  url "https://github.com/koalaman/shellcheck/archive/v0.3.2.tar.gz"
-  sha1 "dd030c63f16e9170eb415176d101bbd2ce66fe00"
+  url "https://github.com/koalaman/shellcheck/archive/v0.3.6.tar.gz"
+  sha256 "e63314f3d40042897a9ac92f9ca2b0bd263b9d524f8491daf73a25a9e75ebc98"
 
   bottle do
-    cellar :any
-    sha1 "903cdcdf9c39323152d6603bf36a48d470742805" => :mavericks
-    sha1 "78456df525113ef15a979e4a943e39eaa9643e60" => :mountain_lion
-    sha1 "e6f02857491301f0517627b103a7a719ac5521f9" => :lion
+    sha256 "f1bdb1d529d7c4ebf5a2bbeef321d0a2abb0ff2261974b7f5f16fec1b7791d72" => :yosemite
+    sha256 "7e691db07b6f8fc35e9524c1416673f52341ae71d2635898ad9cfafaa3425e3f" => :mavericks
+    sha256 "e71a5e5d2df172cabb1d7ae5f5fe5ee44a8ad7eceab44df96c239dcee1f9e099" => :mountain_lion
   end
 
   depends_on "ghc" => :build
@@ -22,7 +20,7 @@ class Shellcheck < Formula
 
   def install
     install_cabal_package
-    system "make", "shellcheck.1"
+    system "pandoc", "-s", "-t", "man", "shellcheck.1.md", "-o", "shellcheck.1"
     man1.install "shellcheck.1"
   end
 
@@ -34,6 +32,6 @@ class Shellcheck < Formula
         echo "$f"
       done
     EOS
-    assert `shellcheck -f gcc #{sh}`.include? "Iterate over globs whenever possible"
+    assert `shellcheck -f gcc #{sh}`.include? "[SC2045]"
   end
 end

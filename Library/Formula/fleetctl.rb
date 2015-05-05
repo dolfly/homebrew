@@ -1,22 +1,23 @@
-require 'formula'
+require "formula"
 
 class Fleetctl < Formula
-  homepage 'https://github.com/coreos/fleet'
-  url 'https://github.com/coreos/fleet/archive/v0.5.0.tar.gz'
-  sha1 '90fbbba15a595e707d43f74294b82217bab57b07'
-  head 'https://github.com/coreos/fleet.git'
+  homepage "https://github.com/coreos/fleet"
+  url "https://github.com/coreos/fleet/archive/v0.10.1.tar.gz"
+  sha256 "395d49fcd506803acb6e6e1d9528072ea7469b66d7d317ffbe45e6fe931a53b6"
+  head "https://github.com/coreos/fleet.git"
 
   bottle do
-    sha1 "8abefa5ff7b326a0e607857ed9138ea67105f66f" => :mavericks
-    sha1 "07d9277b0fabe907e138a444a237174cf9c44940" => :mountain_lion
-    sha1 "8046e086e35a8beb49fab62deb4841687623cc04" => :lion
+    cellar :any
+    sha256 "62982186300220afb27c7723e2f16314a48077d3b4768616c24c70e90304b10a" => :yosemite
+    sha256 "b4347fc62257c5280c1b7c5352bd19360e307c4a709501cca25625ff717be051" => :mavericks
+    sha256 "8498d6f0fb5557d7dc8ec1ffea50803cbc6e184b230420e8165dbcbd35256c46" => :mountain_lion
   end
 
-  depends_on 'go' => :build
+  depends_on "go" => :build
 
   def install
-    ENV['GOPATH'] = buildpath
+    ENV["GOPATH"] = buildpath
     system "./build"
-    bin.install 'bin/fleetctl'
+    bin.install "bin/fleetctl"
   end
 end

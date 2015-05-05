@@ -1,28 +1,37 @@
-require 'formula'
-
 class Passenger < Formula
-  homepage 'https://www.phusionpassenger.com/'
-  url 'http://s3.amazonaws.com/phusion-passenger/releases/passenger-4.0.45.tar.gz'
-  sha1 '51dc7f0b01c16fa61d16db894aa61cce9c1b074e'
-  head 'https://github.com/phusion/passenger.git'
+  homepage "https://www.phusionpassenger.com/"
+  url "https://s3.amazonaws.com/phusion-passenger/releases/passenger-5.0.7.tar.gz"
+  sha256 'e1f481d7bc2be54aaad7aa3201d24253dcb17a3e505dca273fd7725fedeabf29'
+  head "https://github.com/phusion/passenger.git"
 
   bottle do
-    sha1 "9086956a22cf6af569f5e61037b5ebd8b9d546ac" => :mavericks
-    sha1 "afd1f04f7b1a52ad6dc5491fd6532eff304978ec" => :mountain_lion
+    sha256 "2bb52a16a5cc41d2ea75c645dc1db475e753459688ddd05760d07ddc00a97fa9" => :yosemite
+    sha256 "37ab419adf9be78c3a30d157b72c77f57ee1513fd3cbab6bf3dd3f2a195b4b4d" => :mavericks
+    sha256 "99cbfc99717509fae63ca031c21b0feb25826773b14941259c3fca366abe60ef" => :mountain_lion
   end
 
-  depends_on 'pcre'
-  depends_on :macos => :mountain_lion
+  depends_on "pcre"
+  depends_on "openssl"
+  depends_on :macos => :lion
+
+  option "without-apache2-module", "Disable Apache2 module"
 
   def install
-    rake "apache2"
+    rake "apache2" if build.with? "apache2-module"
     rake "nginx"
     rake "webhelper"
 
-    necessary_files = Dir["configure", "Rakefile", "README.md", "CONTRIBUTORS",
+    (libexec/"download_cache").mkpath
+
+    # Fixes https://github.com/phusion/passenger/issues/1288
+    rm_rf "buildout/libev"
+    rm_rf "buildout/libeio"
+    rm_rf "buildout/cache"
+
+    necessary_files = Dir[".editorconfig", "configure", "Rakefile", "README.md", "CONTRIBUTORS",
       "CONTRIBUTING.md", "LICENSE", "CHANGELOG", "INSTALL.md",
       "passenger.gemspec", "build", "lib", "node_lib", "bin", "doc", "man",
-      "helper-scripts", "ext", "resources", "buildout"]
+      "dev", "helper-scripts", "ext", "resources", "buildout"]
     libexec.mkpath
     cp_r necessary_files, libexec, :preserve => true
 
@@ -39,24 +48,30 @@ class Passenger < Formula
     system "/usr/bin/ruby", "./dev/install_scripts_bootstrap_code.rb",
       "--nginx-module-config", libexec/"bin", libexec/"ext/nginx/config"
 
-    mv libexec/'man', share
+    mv libexec/"man", share
   end
 
-  def caveats; <<-EOS.undent
-    To activate Phusion Passenger for Apache, create /etc/apache2/other/passenger.conf:
-      LoadModule passenger_module #{opt_libexec}/buildout/apache2/mod_passenger.so
-      PassengerRoot #{opt_libexec}/lib/phusion_passenger/locations.ini
-      PassengerDefaultRuby /usr/bin/ruby
+  def caveats
+    s = <<-EOS.undent
+      To activate Phusion Passenger for Nginx, run:
+        brew install nginx --with-passenger
 
-    To activate Phusion Passenger for Nginx, run:
-      brew install nginx --with-passenger
-    EOS
+      EOS
+
+    s += <<-EOS.undent if build.with? "apache2-module"
+      To activate Phusion Passenger for Apache, create /etc/apache2/other/passenger.conf:
+        LoadModule passenger_module #{opt_libexec}/buildout/apache2/mod_passenger.so
+        PassengerRoot #{opt_libexec}/lib/phusion_passenger/locations.ini
+        PassengerDefaultRuby /usr/bin/ruby
+
+      EOS
+    s
   end
 
   test do
     ruby_libdir = `#{HOMEBREW_PREFIX}/bin/passenger-config --ruby-libdir`.strip
     if ruby_libdir != (libexec/"lib").to_s
-      raise "Invalid installation"
+      fail "Invalid installation"
     end
   end
 end

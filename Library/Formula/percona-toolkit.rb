@@ -1,25 +1,28 @@
 require "formula"
 
 class PerconaToolkit < Formula
-  homepage "http://www.percona.com/software/percona-toolkit/"
-  url "http://www.percona.com/redir/downloads/percona-toolkit/2.2.8/percona-toolkit-2.2.8.tar.gz"
-  sha1 "26c53ab05354af7bf7bda3b9bbcb48349b046246"
+  homepage "https://www.percona.com/software/percona-toolkit/"
+  url "https://www.percona.com/redir/downloads/percona-toolkit/2.2.13/tarball/percona-toolkit-2.2.13.tar.gz"
+  sha1 "f3e0e59e6036bfabbd5db881848022e1e4881ab9"
 
   bottle do
-    sha1 "4f7fee1c805430ae44687a9181db218c50f19c18" => :mavericks
-    sha1 "acd9e515966c53d16770c13a1502db2cf2690925" => :mountain_lion
-    sha1 "87a3e90e6131bbea8ced04c361a1d137a61e7ef5" => :lion
+    sha1 "93a5ad98d2b802f54a63d25af0b47756dcdd182b" => :yosemite
+    sha1 "6db69533613496f4f42a1384e4e58275b9ef5df5" => :mavericks
+    sha1 "fdd28988814bb4151bc2308147a881cb00e589c9" => :mountain_lion
   end
 
   depends_on :mysql
+  depends_on "openssl"
 
   resource "DBD::mysql" do
     url "http://search.cpan.org/CPAN/authors/id/C/CA/CAPTTOFU/DBD-mysql-4.027.tar.gz"
+    mirror "http://search.mcpan.org/CPAN/authors/id/C/CA/CAPTTOFU/DBD-mysql-4.027.tar.gz"
     sha1 "3bf1edd6f0b4f6144b2aaa715c80df3fb1cd2119"
   end
 
   resource "JSON" do
     url "http://search.cpan.org/CPAN/authors/id/M/MA/MAKAMAKA/JSON-2.90.tar.gz"
+    mirror "http://search.mcpan.org/CPAN/authors/id/M/MA/MAKAMAKA/JSON-2.90.tar.gz"
     sha1 "8f0ffe72cbe9e6287d7ecafcf19b31cc297364c2"
   end
 

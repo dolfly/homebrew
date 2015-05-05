@@ -1,33 +1,21 @@
-require "formula"
-
 class Mono < Formula
   homepage "http://www.mono-project.com/"
-  url "http://download.mono-project.com/sources/mono/mono-3.4.0.tar.bz2"
-  sha1 "bae86f50f9a29d68d4e1917358996e7186e7f89e"
+  url "http://download.mono-project.com/sources/mono/mono-4.0.1.tar.bz2"
+  sha256 "ff1f15f3b8d43c6a2818c00fabe377b2d8408ad14acd9d507658b4cae00f5bce"
+
+  # xbuild requires the .exe files inside the runtime directories to
+  # be executable
+  skip_clean "lib/mono"
 
   bottle do
-    sha1 "dca650732ccb8aac36e56cd7bce03851d69e2d1c" => :mavericks
-    sha1 "498c0c5c8dd7c8b867072cb96aa9f013c51e4d78" => :mountain_lion
-    sha1 "b0a97c07d45fab229594d1742baef9cc97cc8405" => :lion
+    sha256 "7a43ae0a117cbc6568f42e164e9b6381fa8be868211f03fff4269b72955d6d4e" => :yosemite
+    sha256 "f17c96a484176dd3e3715c5c0a3421c7027b739585482543b8d483139ef1186c" => :mavericks
+    sha256 "93690424e73a62c5641b9a9bed86117813f6d8172656726c7c33e377885db37d" => :mountain_lion
   end
 
   resource "monolite" do
-    url "http://storage.bos.xamarin.com/mono-dist-master/latest/monolite-111-latest.tar.gz"
-    sha1 "af90068351895082f03fdaf2840b7539e23e3f32"
-  end
-
-  # This file is missing in the 3.4.0 tarball as of 2014-05-14...
-  # See https://bugzilla.xamarin.com/show_bug.cgi?id=18690
-  resource "Microsoft.Portable.Common.targets" do
-    url "https://raw.githubusercontent.com/mono/mono/mono-3.4.0/mcs/tools/xbuild/targets/Microsoft.Portable.Common.targets"
-    sha1 "7624c3f6d1e4867da2e217ba0d1595a224971e27"
-  end
-
-  # help mono find its MonoPosixHelper lib when it is not in a system path
-  # see https://bugzilla.xamarin.com/show_bug.cgi?id=18555
-  patch do
-    url "https://bugzilla.xamarin.com/attachment.cgi?id=6399"
-    sha1 "d011dc55f341feea0bdb8aa645688b815910b734"
+    url "http://storage.bos.xamarin.com/mono-dist-4.0.0-release/79/7975f5090d8b0d266dc0ba824295d92edd8873da/monolite-117-latest.tar.gz"
+    sha256 "7c48200e4c8bdfe890a0b5301975feac0b2fc6797e6accd00e7a366edbba92e7"
   end
 
   def install
@@ -37,16 +25,15 @@ class Mono < Formula
 
     args = %W[
       --prefix=#{prefix}
+      --disable-dependency-tracking
+      --disable-silent-rules
       --enable-nls=no
     ]
+
     args << "--build=" + (MacOS.prefer_64_bit? ? "x86_64": "i686") + "-apple-darwin"
 
     system "./configure", *args
     system "make"
-
-    # TODO: Remove once the updated 3.4.0 tarball gets built.
-    (buildpath+"mcs/tools/xbuild/targets").install resource("Microsoft.Portable.Common.targets")
-
     system "make", "install"
     # mono-gdb.py and mono-sgen-gdb.py are meant to be loaded by gdb, not to be
     # run directly, so we move them out of bin
@@ -55,8 +42,8 @@ class Mono < Formula
 
   test do
     test_str = "Hello Homebrew"
-    hello = (testpath/"hello.cs")
-    hello.write <<-EOS.undent
+    test_name = "hello.cs"
+    (testpath/test_name).write <<-EOS.undent
       public class Hello1
       {
          public static void Main()
@@ -65,11 +52,25 @@ class Mono < Formula
          }
       }
     EOS
-    `#{bin}/mcs #{hello}`
-    assert $?.success?
-    output = `#{bin}/mono hello.exe`
-    assert $?.success?
-    assert_equal test_str, output.strip
+    shell_output "#{bin}/mcs #{test_name}"
+    output = shell_output "#{bin}/mono hello.exe"
+    assert_match test_str, output.strip
+
+    # Tests that xbuild is able to execute lib/mono/*/mcs.exe
+    (testpath/"test.csproj").write <<-EOS.undent
+      <?xml version="1.0" encoding="utf-8"?>
+      <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+        <PropertyGroup>
+          <AssemblyName>HomebrewMonoTest</AssemblyName>
+          <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+        </PropertyGroup>
+        <ItemGroup>
+          <Compile Include="#{test_name}" />
+        </ItemGroup>
+        <Import Project="$(MSBuildBinPath)\\Microsoft.CSharp.targets" />
+      </Project>
+    EOS
+    shell_output "#{bin}/xbuild test.csproj"
   end
 
   def caveats; <<-EOS.undent

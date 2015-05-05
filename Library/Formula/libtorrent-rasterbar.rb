@@ -1,9 +1,9 @@
 require "formula"
 
 class LibtorrentRasterbar < Formula
-  homepage "http://www.rasterbar.com/products/libtorrent/"
-  url "https://downloads.sourceforge.net/project/libtorrent/libtorrent/libtorrent-rasterbar-0.16.17.tar.gz"
-  sha1 "e713b5dfc45194bfc50fa21096ab67c374ae3740"
+  homepage "http://sourceforge.net/projects/libtorrent/"
+  url "https://downloads.sourceforge.net/project/libtorrent/libtorrent/libtorrent-rasterbar-1.0.4.tar.gz"
+  sha256 "1f567823133b1493b9717afc8334eed691bf0ab452d4a2e0f644989f13ce9db0"
 
   head do
     url "https://libtorrent.googlecode.com/svn/trunk"
@@ -12,36 +12,27 @@ class LibtorrentRasterbar < Formula
     depends_on "libtool" => :build
   end
 
-  devel do
-    url "https://downloads.sourceforge.net/project/libtorrent/libtorrent/libtorrent-rasterbar-1.0.0-RC3.tar.gz"
-    sha1 "8164b48a22347a33b5a7e4cef39e2395aec4dd12"
-  end
-
   bottle do
     cellar :any
-    sha1 "0a1b9a57a66f2f38c125e21f1b1e1f5eeaa1aab3" => :mavericks
-    sha1 "432ae45679555de8dd26d136cf84eb16c88d0b1d" => :mountain_lion
-    sha1 "f59cc0d4a7ce1cfdfe221039cfe76958564e834b" => :lion
+    sha256 "52f49857c787553ccd3439aeeba3988066bcabc4244d0a40a8220cc4e368d3e7" => :yosemite
+    sha256 "97e8fc6f9b4eaf89f1dd4988e7bf3d3c86f7a096c27b2cec7ef7460b43009153" => :mavericks
+    sha256 "c094fd6b5826e83b99ee71be5f075d2a44c81e33a2c6a480b5709ad696825aa2" => :mountain_lion
   end
 
   depends_on "pkg-config" => :build
   depends_on "openssl"
   depends_on :python => :optional
   depends_on "geoip" => :optional
-
-  if build.with? "python"
-    depends_on "boost" => "with-python"
-  else
-    depends_on "boost"
-  end
+  depends_on "boost"
+  depends_on "boost-python" if build.with? "python"
 
   def install
-    boost = Formula["boost"]
-
     args = [ "--disable-debug",
              "--disable-dependency-tracking",
+             "--disable-silent-rules",
+             "--enable-encryption",
              "--prefix=#{prefix}",
-             "--with-boost=#{boost.opt_prefix}" ]
+             "--with-boost=#{Formula["boost"].opt_prefix}" ]
 
     # Build python bindings requires forcing usage of the mt version of boost_python.
     if build.with? "python"
@@ -60,6 +51,6 @@ class LibtorrentRasterbar < Formula
       system "./configure", *args
     end
 
-    system "make install"
+    system "make", "install"
   end
 end

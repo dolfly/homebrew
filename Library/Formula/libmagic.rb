@@ -1,24 +1,19 @@
-require 'formula'
-
 class Libmagic < Formula
-  homepage 'http://www.darwinsys.com/file/'
-  url 'ftp://ftp.astron.com/pub/file/file-5.19.tar.gz'
-  mirror 'http://fossies.org/unix/misc/file-5.19.tar.gz'
-  sha1 '0dff09eb44fde1998be79e8d312e9be4456d31ee'
+  homepage "http://www.darwinsys.com/file/"
+  url "ftp://ftp.astron.com/pub/file/file-5.22.tar.gz"
+  mirror "https://fossies.org/unix/misc/file-5.22.tar.gz"
+  sha256 "c4e3a8e44cb888c5e4b476e738503e37fb9de3b25a38c143e214bfc12109fc0b"
+  revision 1
 
   bottle do
-    sha1 "35a401959b3925929ef220a35712a1a5f6f42ad9" => :mavericks
-    sha1 "e4bdd610c71cb05bedfb00ce940ec476dbed4c29" => :mountain_lion
-    sha1 "812930f1bb60fe40ec45e92bc385a8bd63e34813" => :lion
+    sha256 "de4b3746d2a43085e5fde903f79f587d203e3bb6b7880554da3fc1c8d48fac18" => :yosemite
+    sha256 "70f2cd35ef919c70ca03daecd11ae89b22f05749aeee23d868f0a6a0a97ae4cc" => :mavericks
+    sha256 "de694310a07551fc96f7e285085c708b14e4d8e210878541eadd19e892fa5fd6" => :mountain_lion
   end
 
   option :universal
 
   depends_on :python => :optional
-
-  # Fixed upstream, should be in next release
-  # See http://bugs.gw.com/view.php?id=230
-  patch :DATA if MacOS.version < :lion
 
   def install
     ENV.universal_binary if build.universal?
@@ -27,12 +22,17 @@ class Libmagic < Formula
     rm "src/magic.h"
 
     system "./configure", "--disable-dependency-tracking",
+                          "--disable-silent-rules",
                           "--prefix=#{prefix}",
-                          "--enable-fsect-man5"
-    system "make install"
+                          "--enable-fsect-man5",
+                          "--enable-static"
+    system "make", "install"
+    (share+"misc/magic").install Dir["magic/Magdir/*"]
 
-    cd "python" do
-      system "python", "setup.py", "install", "--prefix=#{prefix}"
+    if build.with? "python"
+      cd "python" do
+        system "python", *Language::Python.setup_install_args(prefix)
+      end
     end
 
     # Don't dupe this system utility
@@ -40,18 +40,3 @@ class Libmagic < Formula
     rm man1/"file.1"
   end
 end
-
-__END__
-diff --git a/src/getline.c b/src/getline.c
-index e3c41c4..74c314e 100644
---- a/src/getline.c
-+++ b/src/getline.c
-@@ -76,7 +76,7 @@ getdelim(char **buf, size_t *bufsiz, int delimiter, FILE *fp)
-  }
- }
-
--ssize_t
-+public ssize_t
- getline(char **buf, size_t *bufsiz, FILE *fp)
- {
-  return getdelim(buf, bufsiz, '\n', fp);

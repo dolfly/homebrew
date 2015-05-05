@@ -1,16 +1,23 @@
-require 'formula'
+require "formula"
 
 class Uwsgi < Formula
-  homepage "http://projects.unbit.it/uwsgi/"
-  url "http://projects.unbit.it/downloads/uwsgi-2.0.5.1.tar.gz"
-  sha1 "67244683a76a7ce88f244ef8044ecf32bf3b8d41"
+  homepage "https://uwsgi-docs.readthedocs.org/en/latest/"
+  head "https://github.com/unbit/uwsgi.git"
+
+  stable do
+    url "http://projects.unbit.it/downloads/uwsgi-2.0.10.tar.gz"
+    sha1 "31bae2dac113af8d95dbc9b982df139ff61ce209"
+  end
 
   bottle do
-    revision 1
-    sha1 "f29ce8d64c067bffb06c61508ada6fcec4b8ac4b" => :mavericks
-    sha1 "2cbe8ba97f52400dedd48ba14cdeb9e0b7a00f68" => :mountain_lion
-    sha1 "f2d33b294b405840c3b687edec85e10dc56d5b13" => :lion
+    sha256 "85e9a1c89c49f76818c87be4a6a9fe200ccc4ff39d9d788d328702b1463c740f" => :yosemite
+    sha256 "12ce6b55caecc1fb74979e2d3d858dafd9e64805f748d78792e6c87948fb6664" => :mavericks
+    sha256 "9c0a86e07730a797191d06e01b9c30bce6af0edf15cf212be5b3a7ec5ac492fb" => :mountain_lion
   end
+
+  depends_on "pkg-config" => :build
+  depends_on "openssl"
+  depends_on :python if MacOS.version <= :snow_leopard
 
   depends_on "pcre"
   depends_on "yajl" if build.without? "jansson"
@@ -22,13 +29,14 @@ class Uwsgi < Formula
   depends_on "libffi" => :optional
   depends_on "libxslt" => :optional
   depends_on "libyaml" => :optional
-  depends_on "lua" => :optional
+  depends_on "lua51" => :optional
   depends_on "mongodb" => :optional
   depends_on "mongrel2" => :optional
   depends_on "mono" => :optional
   depends_on "nagios" => :optional
   depends_on "postgresql" => :optional
   depends_on "pypy" => :optional
+  depends_on "python" => :optional
   depends_on "python3" => :optional
   depends_on "rrdtool" => :optional
   depends_on "rsyslog" => :optional
@@ -41,17 +49,10 @@ class Uwsgi < Formula
   option "with-ruby", "Compile with Ruby support"
 
   def install
-    %w{CFLAGS LDFLAGS}.each { |e| ENV.append e, "-arch #{MacOS.preferred_arch}" }
+    ENV.append %w{CFLAGS LDFLAGS}, "-arch #{MacOS.preferred_arch}"
 
-    json = "yajl"
-    if build.with? "jansson"
-      json = "jansson"
-    end
-
-    yaml = "embedded"
-    if build.with? "libyaml"
-      yaml = "libyaml"
-    end
+    json = build.with?("jansson") ? "jansson" : "yajl"
+    yaml = build.with?("libyaml") ? "libyaml" : "embedded"
 
     (buildpath/"buildconf/brew.ini").write <<-EOS.undent
       [uwsgi]
@@ -123,7 +124,7 @@ class Uwsgi < Formula
     bin.install "uwsgi"
   end
 
-  plist_options :manual => 'uwsgi'
+  plist_options :manual => "uwsgi"
 
   def plist; <<-EOS.undent
     <?xml version="1.0" encoding="UTF-8"?>

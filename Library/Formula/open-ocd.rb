@@ -5,6 +5,11 @@ class OpenOcd < Formula
   url 'https://downloads.sourceforge.net/project/openocd/openocd/0.8.0/openocd-0.8.0.tar.bz2'
   sha1 '10bf9eeb54e03083cb1a101785b2d69fbdf18f31'
 
+  devel do
+    url 'https://downloads.sourceforge.net/project/openocd/openocd/0.9.0-rc1/openocd-0.9.0-rc1.tar.bz2'
+    sha1 '8ff9dca7751f7f4becca1507fd74df4405c5155e'
+  end
+
   head do
     url 'git://git.code.sf.net/p/openocd/code'
 
@@ -14,8 +19,9 @@ class OpenOcd < Formula
     depends_on "texinfo" => :build
   end
 
-  option 'with-hidapi', 'Enable building support for devices using HIDAPI (CMSIS-DAP)'
-  option 'with-libftdi', 'Enable building support for libftdi-based drivers (USB-Blaster, ASIX Presto, OpenJTAG)'
+  option 'without-hidapi', 'Disable building support for devices using HIDAPI (CMSIS-DAP)'
+  option 'without-libftdi', 'Disable building support for libftdi-based drivers (USB-Blaster, ASIX Presto, OpenJTAG)'
+  option 'without-libusb',  'Disable building support for all other USB adapters'
 
   depends_on 'pkg-config' => :build
   depends_on 'libusb' => :recommended

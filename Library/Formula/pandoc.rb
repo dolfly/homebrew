@@ -1,41 +1,39 @@
-require "formula"
 require "language/haskell"
 
 class Pandoc < Formula
   include Language::Haskell::Cabal
 
-  homepage "http://johnmacfarlane.net/pandoc/"
-  url "https://pandoc.googlecode.com/files/pandoc-1.12.3.tar.gz"
-  sha1 "f519b5fb8c88ff4374432477dc12f68bbe238510"
+  homepage "http://pandoc.org"
+  url "https://hackage.haskell.org/package/pandoc-1.13.2.1/pandoc-1.13.2.1.tar.gz"
+  sha256 "66da6eb690b8de41eccf05620e165630854d74c08cf69dbfb68d0ea84589785f"
+
+  head "https://github.com/jgm/pandoc.git"
 
   bottle do
-    sha1 "216b78973a1c26c7091839dd7cfa8a50e2cd6fcb" => :mavericks
-    sha1 "58d063c1bb5c02dc454de94dde147003998a4e1d" => :mountain_lion
-    sha1 "17ebadac09f6c65fe450751e7c1bdae2efdeba2d" => :lion
-  end
-
-  resource "completion" do
-    url "https://github.com/dsanson/pandoc-completion.git", :branch => "master"
+    sha256 "e9df02321a7129c78dec25d350730cd6e9197d31ef96c800f6462535c9411749" => :yosemite
+    sha256 "471cbe82c36664f90d43736c2169048cf2735b21895a6da936cf46620b963444" => :mavericks
+    sha256 "0fa5678764cea7319f9f09bca10e2413157f0310ac2067efc9d3d7cd6c02195a" => :mountain_lion
   end
 
   depends_on "ghc" => :build
   depends_on "cabal-install" => :build
   depends_on "gmp"
 
+  fails_with :clang do
+    build 425
+    cause "clang segfaults on Lion"
+  end
+
   def install
-    resource("completion").stage do
-      bash_completion.install "pandoc-completion.bash"
-    end
     cabal_sandbox do
-      cabal_install_tools "alex", "happy"
-      cabal_install "--only-dependencies", "--constraint=temporary==1.2.0.1"
+      cabal_install "--only-dependencies"
       cabal_install "--prefix=#{prefix}"
     end
     cabal_clean_lib
   end
 
   test do
-    system "pandoc", "-o", "output.html", prefix/"README"
-    assert (Pathname.pwd/"output.html").read.include? '<h1 id="synopsis">Synopsis</h1>'
+    system "pandoc", "-o", testpath/"output.html", prefix/"README"
+    assert (testpath/"output.html").read.include? '<h1 id="synopsis">Synopsis</h1>'
   end
 end

@@ -1,20 +1,20 @@
 require 'formula'
 
 class Strongswan < Formula
-  homepage 'http://www.strongswan.org'
-  url 'http://download.strongswan.org/strongswan-5.1.3.tar.bz2'
-  sha1 '6f8898308999b8fc293812ea5812a12c9ddbedc7'
+  homepage 'https://www.strongswan.org'
+  url 'https://download.strongswan.org/strongswan-5.3.0.tar.bz2'
+  sha1 '6d83222143ff4dabbc667e9b1725cac55c546826'
 
   bottle do
-    sha1 "7a63c925dde5195c98e3e63dc3fb6eb963eac106" => :mavericks
-    sha1 "f4e35b174358d712e8fab4bee12a7a864860b05c" => :mountain_lion
-    sha1 "a6006954a5d396d2822212bec774f7a4b863e19f" => :lion
+    sha256 "ec1068ac5a7d24f1ed98869e43a2d1c25cbd64d4696e680c91250d89bad89832" => :yosemite
+    sha256 "2109c92e70fa30f788961f7821ddacce96f2dc0f94b2d85fb975bdc82e0ed542" => :mavericks
+    sha256 "599a83b29ab463c09b247c96492432c353403b1aeb95f636bd68de542fa9cd5d" => :mountain_lion
   end
 
   option 'with-curl', 'Build with libcurl based fetcher'
   option 'with-suite-b', 'Build with Suite B support (does not use the IPsec implementation provided by the kernel)'
 
-  depends_on 'openssl' if build.with? "suite-b" or MacOS.version <= :leopard
+  depends_on 'openssl'
   depends_on 'curl' => :optional
 
   def install
@@ -41,12 +41,14 @@ class Strongswan < Formula
       --enable-pgp
       --enable-pkcs1
       --enable-pkcs8
+      --enable-pki
       --enable-pubkey
       --enable-revocation
+      --enable-scepclient
       --enable-socket-default
       --enable-sshkey
       --enable-stroke
-      --enable-tools
+      --enable-swanctl
       --enable-updown
       --enable-unity
       --enable-xauth-generic
@@ -54,12 +56,6 @@ class Strongswan < Formula
     args << "--enable-curl" if build.with? 'curl'
     args << "--enable-kernel-pfkey" if build.without? 'suite-b'
     args << "--enable-kernel-libipsec" if build.with? 'suite-b'
-
-    # problem with weak reference, will be fixed in the next release
-    inreplace "src/libstrongswan/utils/test.c" do |s|
-      s.gsub! /__attribute__.+$/, "{}"
-      s.gsub! /!testable_functions_create/, "TRUE"
-    end
 
     system "./configure", *args
     system "make", "install"

@@ -1,41 +1,39 @@
 require 'formula'
 
 class Arangodb < Formula
-  homepage 'http://www.arangodb.org/'
-  url 'https://www.arangodb.org/repositories/Source/ArangoDB-2.1.1.tar.gz'
-  sha1 '1a7b076e91b716b6db1c61221751a3f433170d5c'
+  homepage 'https://www.arangodb.com/'
+  url 'https://www.arangodb.com/repositories/Source/ArangoDB-2.5.3.tar.gz'
+  sha1 '92f9165dab6d23213691104621259a418dc37caf'
 
-  head "https://github.com/triAGENS/ArangoDB.git", :branch => 'unstable'
+  head "https://github.com/arangodb/arangodb.git", :branch => 'unstable'
 
   bottle do
-    sha1 "f5993d2d9fca48548349c6c4e44bd92b6d44a8a3" => :mavericks
-    sha1 "0abaa39be9485f55105d36370f35220722cc9f83" => :mountain_lion
-    sha1 "8de5c77bcfa1ae86cbb80e1fd161637e140dea3a" => :lion
+    sha256 "cc3183baaa1593ebfe547d9d65d1bc160c64e1af47cc81649cb0d680180033a4" => :yosemite
+    sha256 "ed86246343586d0a1d280f7b85e6120c320e38f82d2c0410bc5643d156512388" => :mavericks
+    sha256 "e59bca53798ff6f9d49a5919cd96cf58ae28624e3c7c8561db19f514f771d547" => :mountain_lion
   end
 
   depends_on 'go' => :build
+  depends_on 'openssl'
 
-  def suffix
-    if build.stable?
-      return ""
-    else
-      return "-" + (build.devel? ? version : "unstable")
-    end
-  end
+  needs :cxx11
 
   def install
+    # clang on 10.8 will still try to build against libstdc++,
+    # which fails because it doesn't have the C++0x features
+    # arangodb requires.
+    ENV.libcxx
+
     args = %W[
       --disable-dependency-tracking
       --prefix=#{prefix}
       --disable-relative
-      --enable-all-in-one-icu
-      --enable-all-in-one-libev
-      --enable-all-in-one-v8
       --enable-mruby
       --datadir=#{share}
       --localstatedir=#{var}
-      --program-suffix=#{suffix}
     ]
+
+    args << "--program-suffix=unstable" if build.head?
 
     system "./configure", *args
     system "make install"

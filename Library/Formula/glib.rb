@@ -1,55 +1,62 @@
-require 'formula'
-
 class Glib < Formula
-  homepage "http://developer.gnome.org/glib/"
-  url "http://ftp.gnome.org/pub/gnome/sources/glib/2.40/glib-2.40.0.tar.xz"
-  sha256 "0d27f195966ecb1995dcce0754129fd66ebe820c7cd29200d264b02af1aa28b5"
-  revision 1
+  homepage "https://developer.gnome.org/glib/"
+  url "http://ftp.gnome.org/pub/gnome/sources/glib/2.44/glib-2.44.0.tar.xz"
+  sha256 "f2d362b106a08fa801770d41829a06fcfe287a00421018869eebf5efc796f5b9"
 
   bottle do
-    sha1 "744e1082ceb6840c320e2df02d7aed1c9cd1ae7c" => :mavericks
-    sha1 "ab53e313c471f4112dc3966b543756b40e8c3a2b" => :mountain_lion
-    sha1 "0ff3d77f6205d79189d84e1ec2500dbce2528acc" => :lion
+    sha256 "d520b2a66d30980984e941da1c527d161188e347eb684eff5c93f465925818ee" => :yosemite
+    sha256 "5fe51191fbdedebdbb37738cd8e10ee4069fff832359b2ce446656759a56a4e3" => :mavericks
+    sha256 "0e44ed5114c08b165081e0338d6ccbda8023f0839b57e978bebfd408776b1ae6" => :mountain_lion
   end
 
   option :universal
-  option 'test', 'Build a debug build and run tests. NOTE: Not all tests succeed yet'
-  option 'with-static', 'Build glib with a static archive.'
+  option "with-test", "Build a debug build and run tests. NOTE: Not all tests succeed yet"
+  option "with-static", "Build glib with a static archive."
 
-  depends_on 'pkg-config' => :build
-  depends_on 'gettext'
-  depends_on 'libffi'
+  deprecated_option "test" => "with-test"
+
+  depends_on "pkg-config" => :build
+  depends_on "gettext"
+  depends_on "libffi"
 
   fails_with :llvm do
     build 2334
     cause "Undefined symbol errors while linking"
   end
 
-  resource 'config.h.ed' do
-    url 'https://trac.macports.org/export/111532/trunk/dports/devel/glib2/files/config.h.ed'
-    version '111532'
-    sha1 '0926f19d62769dfd3ff91a80ade5eff2c668ec54'
-  end if build.universal?
+  resource "config.h.ed" do
+    url "https://trac.macports.org/export/111532/trunk/dports/devel/glib2/files/config.h.ed"
+    version "111532"
+    sha256 "9f1e23a084bc879880e589893c17f01a2f561e20835d6a6f08fcc1dad62388f1"
+  end
 
   # https://bugzilla.gnome.org/show_bug.cgi?id=673135 Resolved as wontfix,
   # but needed to fix an assumption about the location of the d-bus machine
   # id file.
   patch do
-    url "https://gist.githubusercontent.com/jacknagel/af332f42fae80c570a77/raw/a738786e0f7ea46c4a93a36a3d9d569017cca7f2/glib-hardcoded-paths.diff"
-    sha1 "ce54abdbb4386902a33dbad7cb6c8f1b0cbdab0d"
+    url "https://gist.githubusercontent.com/jacknagel/af332f42fae80c570a77/raw/7b5fd0d2e6554e9b770729fddacaa2d648327644/glib-hardcoded-paths.diff"
+    sha256 "a4cb96b5861672ec0750cb30ecebe1d417d38052cac12fbb8a77dbf04a886fcb"
   end
 
   # Fixes compilation with FSF GCC. Doesn't fix it on every platform, due
   # to unrelated issues in GCC, but improves the situation.
   # Patch submitted upstream: https://bugzilla.gnome.org/show_bug.cgi?id=672777
   patch do
-    url "https://gist.githubusercontent.com/jacknagel/9835034/raw/b0388e86f74286f4271f9b0dca8219fdecafd5e3/gio.patch"
-    sha1 "32158fffbfb305296f7665ede6185a47d6f6b389"
+    url "https://gist.githubusercontent.com/jacknagel/9835034/raw/282d36efc126272f3e73206c9865013f52d67cd8/gio.patch"
+    sha256 "d285c70cfd3434394a1c77c92a8d2bad540c954aad21e8bb83777482c26aab9a"
+  end
+
+  # Fixes compilation with GCC 4.2.1 on OSX and BSD.
+  # Reported upstream: https://bugzilla.gnome.org/show_bug.cgi?id=744473
+  # Fixed upstream in commit 4a292721bcf2943bfc05c6a1c859992f28e3efec
+  patch do
+    url "https://git.gnome.org/browse/glib/patch/?id=4a292721bcf2943bfc05c6a1c859992f28e3efec"
+    sha256 "6a5b330c58e42c31fb025fb312740a7dc510c7d7d1205e88c9b13918da6da9f8"
   end
 
   patch do
-    url "https://gist.githubusercontent.com/jacknagel/9726139/raw/9d5635480d96d6b5c717d2c0d5d24de38b68ffbd/universal.patch"
-    sha1 "7f38cab550571b39989275362995ade214b44490"
+    url "https://gist.githubusercontent.com/jacknagel/9726139/raw/a351ea240dea33b15e616d384be0550f5051e959/universal.patch"
+    sha256 "7e1ad7667c7d89fcd08950c9c32cd66eb9c8e2ee843f023d1fadf09a9ba39fee"
   end if build.universal?
 
   def install
@@ -70,35 +77,35 @@ class Glib < Formula
       --with-gio-module-dir=#{HOMEBREW_PREFIX}/lib/gio/modules
     ]
 
-    args << '--enable-static' if build.with? 'static'
+    args << "--enable-static" if build.with? "static"
 
     system "./configure", *args
 
     if build.universal?
-      buildpath.install resource('config.h.ed')
+      buildpath.install resource("config.h.ed")
       system "ed -s - config.h <config.h.ed"
     end
 
     system "make"
     # the spawn-multithreaded tests require more open files
-    system "ulimit -n 1024; make check" if build.include? 'test'
-    system "make install"
+    system "ulimit -n 1024; make check" if build.with? "test"
+    system "make", "install"
 
     # `pkg-config --libs glib-2.0` includes -lintl, and gettext itself does not
     # have a pkgconfig file, so we add gettext lib and include paths here.
     gettext = Formula["gettext"].opt_prefix
-    inreplace lib+'pkgconfig/glib-2.0.pc' do |s|
-      s.gsub! 'Libs: -L${libdir} -lglib-2.0 -lintl',
+    inreplace lib+"pkgconfig/glib-2.0.pc" do |s|
+      s.gsub! "Libs: -L${libdir} -lglib-2.0 -lintl",
               "Libs: -L${libdir} -lglib-2.0 -L#{gettext}/lib -lintl"
-      s.gsub! 'Cflags: -I${includedir}/glib-2.0 -I${libdir}/glib-2.0/include',
+      s.gsub! "Cflags: -I${includedir}/glib-2.0 -I${libdir}/glib-2.0/include",
               "Cflags: -I${includedir}/glib-2.0 -I${libdir}/glib-2.0/include -I#{gettext}/include"
     end
 
-    (share+'gtk-doc').rmtree
+    (share+"gtk-doc").rmtree
   end
 
   test do
-    (testpath/'test.c').write <<-EOS.undent
+    (testpath/"test.c").write <<-EOS.undent
       #include <string.h>
       #include <glib.h>
 

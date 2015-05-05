@@ -1,18 +1,16 @@
-require 'formula'
-
 class Re2 < Formula
-  homepage 'https://code.google.com/p/re2/'
-  url 'https://re2.googlecode.com/files/re2-20140304.tgz'
-  sha1 'f30dda8e530921b623c32aa58a5dabbe9157f6ca'
+  homepage "https://github.com/google/re2"
+  url "https://re2.googlecode.com/files/re2-20140304.tgz"
+  sha1 "f30dda8e530921b623c32aa58a5dabbe9157f6ca"
 
-  head 'https://re2.googlecode.com/hg'
+  head "https://github.com/google/re2.git"
 
   bottle do
     cellar :any
-    revision 1
-    sha1 "c502279673f7a522964161813c1d284d3dd12115" => :mavericks
-    sha1 "ed4e24ef60a2c44af9ed67b22d6f983f3177f0fc" => :mountain_lion
-    sha1 "50250f3de155321a6b93276f0df967e868fc4ca8" => :lion
+    revision 2
+    sha256 "5939606ce231feeca079414abe2beb98ad1e1c2393d5ba7f25f476dfd82e3ca2" => :yosemite
+    sha256 "1d4eda8d4e9b3434ebe882ec05c150cc3d30f7798f0e89dc03b298de11531a23" => :mavericks
+    sha256 "0c88133e1c513e2b11df6b29f691fd24a04b57e69ad330e3595bc2ccb85a8532" => :mountain_lion
   end
 
   def install
@@ -26,6 +24,7 @@ class Re2 < Formula
     end
     system "make", "install", "prefix=#{prefix}"
     mv lib/"libre2.so.0.0.0", lib/"libre2.0.0.0.dylib"
+    system "install_name_tool", "-id", "#{lib}/libre2.0.dylib", "#{lib}/libre2.0.0.0.dylib"
     lib.install_symlink "libre2.0.0.0.dylib" => "libre2.0.dylib"
     lib.install_symlink "libre2.0.0.0.dylib" => "libre2.dylib"
   end

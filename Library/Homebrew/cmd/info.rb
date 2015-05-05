@@ -54,7 +54,7 @@ module Homebrew
   end
 
   def github_fork
-    if which 'git' and (HOMEBREW_REPOSITORY/".git").directory?
+    if (HOMEBREW_REPOSITORY/".git").directory?
       if `git remote -v` =~ %r{origin\s+(https?://|git(?:@|://))github.com[:/](.+)/homebrew}
         $2
       end
@@ -62,17 +62,17 @@ module Homebrew
   end
 
   def github_info f
-    if f.path.to_s =~ HOMEBREW_TAP_PATH_REGEX
-      user = $1
-      repo = $2
-      path = $3
-    else
+    if f.tap?
+      user, repo = f.tap.split("/", 2)
+      path = f.path.relative_path_from(HOMEBREW_LIBRARY.join("Taps", f.tap))
+      "https://github.com/#{user}/#{repo}/blob/master/#{path}"
+    elsif f.core_formula?
       user = f.path.parent.cd { github_fork }
-      repo = "homebrew"
-      path = "Library/Formula/#{f.path.basename}"
+      path = f.path.relative_path_from(HOMEBREW_REPOSITORY)
+      "https://github.com/#{user}/homebrew/blob/master/#{path}"
+    else
+      f.path
     end
-
-    "https://github.com/#{user}/#{repo}/blob/master/#{path}"
   end
 
   def info_formula f
@@ -123,12 +123,12 @@ module Homebrew
     unless f.deps.empty?
       ohai "Dependencies"
       %w{build required recommended optional}.map do |type|
-        deps = f.deps.send(type)
+        deps = f.deps.send(type).uniq
         puts "#{type.capitalize}: #{decorate_dependencies deps}" unless deps.empty?
       end
     end
 
-    unless f.build.empty?
+    unless f.options.empty?
       ohai "Options"
       Homebrew.dump_options_for_formula f
     end

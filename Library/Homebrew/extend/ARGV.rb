@@ -1,19 +1,26 @@
 module HomebrewArgvExtension
   def named
-    @named ||= reject{|arg| arg[0..0] == '-'}
+    @named ||= self - options_only
   end
 
   def options_only
-    select {|arg| arg[0..0] == '-'}
+    select { |arg| arg.start_with?("-") }
+  end
+
+  def flags_only
+    select { |arg| arg.start_with?("--") }
   end
 
   def formulae
     require "formula"
-    @formulae ||= downcased_unique_named.map { |name| Formulary.factory(name, spec) }
+    @formulae ||= (downcased_unique_named - casks).map { |name| Formulary.factory(name, spec) }
+  end
+
+  def casks
+    @casks ||= downcased_unique_named.grep HOMEBREW_CASK_TAP_FORMULA_REGEX
   end
 
   def kegs
-    rack = nil
     require 'keg'
     require 'formula'
     @kegs ||= downcased_unique_named.collect do |name|
@@ -21,33 +28,30 @@ module HomebrewArgvExtension
       rack = HOMEBREW_CELLAR/canonical_name
       dirs = rack.directory? ? rack.subdirs : []
 
-      raise NoSuchKegError.new(rack.basename.to_s) if not rack.directory? or dirs.empty?
+      raise NoSuchKegError.new(canonical_name) if dirs.empty?
 
-      linked_keg_ref = HOMEBREW_REPOSITORY/"Library/LinkedKegs"/name
-      opt_prefix = HOMEBREW_PREFIX/"opt"/name
+      linked_keg_ref = HOMEBREW_LIBRARY.join("LinkedKegs", canonical_name)
+      opt_prefix = HOMEBREW_PREFIX.join("opt", canonical_name)
 
-      if opt_prefix.symlink? && opt_prefix.directory?
-        Keg.new(opt_prefix.resolved_path)
-      elsif linked_keg_ref.symlink? && linked_keg_ref.directory?
-        Keg.new(linked_keg_ref.resolved_path)
-      elsif dirs.length == 1
-        Keg.new(dirs.first)
-      elsif (prefix = Formulary.factory(canonical_name).prefix).directory?
-        Keg.new(prefix)
-      else
-        raise MultipleVersionsInstalledError.new(name)
+      begin
+        if opt_prefix.symlink? && opt_prefix.directory?
+          Keg.new(opt_prefix.resolved_path)
+        elsif linked_keg_ref.symlink? && linked_keg_ref.directory?
+          Keg.new(linked_keg_ref.resolved_path)
+        elsif dirs.length == 1
+          Keg.new(dirs.first)
+        elsif (prefix = Formulary.factory(canonical_name).prefix).directory?
+          Keg.new(prefix)
+        else
+          raise MultipleVersionsInstalledError.new(canonical_name)
+        end
+      rescue FormulaUnavailableError
+        raise <<-EOS.undent
+          Multiple kegs installed to #{rack}
+          However we don't know which one you refer to.
+          Please delete (with rm -rf!) all but one and then try again.
+        EOS
       end
-    end
-  rescue FormulaUnavailableError
-    if rack
-      raise <<-EOS.undent
-        Multiple kegs installed to #{rack}
-        However we don't know which one you refer to.
-        Please delete (with rm -rf!) all but one and then try again.
-        Sorry, we know this is lame.
-      EOS
-    else
-      raise
     end
   end
 
@@ -86,8 +90,16 @@ module HomebrewArgvExtension
     include?('--dry-run') || switch?('n')
   end
 
+  def git?
+    flag? "--git"
+  end
+
   def homebrew_developer?
     include? '--homebrew-developer' or !ENV['HOMEBREW_DEVELOPER'].nil?
+  end
+
+  def sandbox?
+    include?("--sandbox") || !ENV["HOMEBREW_SANDBOX"].nil?
   end
 
   def ignore_deps?
@@ -135,13 +147,11 @@ module HomebrewArgvExtension
   end
 
   def build_from_source?
-    include? '--build-from-source' or !ENV['HOMEBREW_BUILD_FROM_SOURCE'].nil?
+    switch?("s") || include?("--build-from-source") || !!ENV["HOMEBREW_BUILD_FROM_SOURCE"]
   end
 
   def flag? flag
-    options_only.any? do |arg|
-      arg == flag || arg[1..1] != '-' && arg.include?(flag[2..2])
-    end
+    options_only.include?(flag) || switch?(flag[2, 1])
   end
 
   def force_bottle?
@@ -149,11 +159,9 @@ module HomebrewArgvExtension
   end
 
   # eg. `foo -ns -i --bar` has three switches, n, s and i
-  def switch? switch_character
-    return false if switch_character.length > 1
-    options_only.any? do |arg|
-      arg[1..1] != '-' && arg.include?(switch_character)
-    end
+  def switch? char
+    return false if char.length > 1
+    options_only.any? { |arg| arg[1, 1] != "-" && arg.include?(char) }
   end
 
   def usage
@@ -169,6 +177,8 @@ module HomebrewArgvExtension
     value 'env'
   end
 
+  private
+
   def spec
     if include?("--HEAD")
       :head
@@ -178,8 +188,6 @@ module HomebrewArgvExtension
       :stable
     end
   end
-
-  private
 
   def downcased_unique_named
     # Only lowercase names, not paths or URLs

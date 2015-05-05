@@ -1,32 +1,27 @@
-require 'formula'
-
 class Redis < Formula
-  homepage 'http://redis.io/'
-  url "http://download.redis.io/releases/redis-2.8.12.tar.gz"
-  sha1 "56c86a4f9eccaf29f934433c7c67a175e404b2f6"
+  homepage "http://redis.io/"
+  url "http://download.redis.io/releases/redis-3.0.0.tar.gz"
+  sha1 "c75fd32900187a7c9f9d07c412ea3b3315691c65"
 
   bottle do
-    sha1 "4b1e2d66d2202498aec7b99bc503458f26bc7432" => :mavericks
-    sha1 "536c1d27ebf94b8331d262b2adc3166a57dfc4b4" => :mountain_lion
-    sha1 "66613e9bd2a314de17bc21562eac954ad0a35355" => :lion
+    sha256 "9222eb768c9f165d35fa923b6ddaf57830928d5bf281b4d794aa14dd63fe5a04" => :yosemite
+    sha256 "283dd74ac65cc8a793144d732b51ec3d125e39172990f12dc7569dd107d25bf2" => :mavericks
+    sha256 "20c407d4ff095a40f3eb3980652adae13e75316c33526c34bd73be19a5df2dab" => :mountain_lion
   end
 
-  head 'https://github.com/antirez/redis.git', :branch => 'unstable'
+  head "https://github.com/antirez/redis.git", :branch => "unstable"
 
   fails_with :llvm do
     build 2334
-    cause 'Fails with "reference out of range from _linenoise"'
+    cause "Fails with \"reference out of range from _linenoise\""
   end
 
   def install
     # Architecture isn't detected correctly on 32bit Snow Leopard without help
     ENV["OBJARCH"] = "-arch #{MacOS.preferred_arch}"
 
-    # Head and stable have different code layouts
-    src = (buildpath/'src/Makefile').exist? ? buildpath/'src' : buildpath
-    system "make", "-C", src, "CC=#{ENV.cc}"
+    system "make", "install", "PREFIX=#{prefix}", "CC=#{ENV.cc}"
 
-    %w[benchmark cli server check-dump check-aof sentinel].each { |p| bin.install src/"redis-#{p}" }
     %w[run db/redis log].each { |p| (var+p).mkpath }
 
     # Fix up default conf file to match our paths
@@ -36,8 +31,8 @@ class Redis < Formula
       s.gsub! "\# bind 127.0.0.1", "bind 127.0.0.1"
     end
 
-    etc.install 'redis.conf'
-    etc.install 'sentinel.conf' => 'redis-sentinel.conf'
+    etc.install "redis.conf"
+    etc.install "sentinel.conf" => "redis-sentinel.conf"
   end
 
   plist_options :manual => "redis-server #{HOMEBREW_PREFIX}/etc/redis.conf"

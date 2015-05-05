@@ -1,19 +1,17 @@
-require "formula"
-
 class Emscripten < Formula
-  homepage "http://emscripten.org"
-  url "https://github.com/kripken/emscripten/archive/1.20.0.tar.gz"
-  sha1 "9a739dc963219f7c4ab70395ac21854e472457a6"
-
-  head "https://github.com/kripken/emscripten.git", :branch => "incoming"
+  homepage "https://kripken.github.io/emscripten-site/"
+  url "https://github.com/kripken/emscripten/archive/1.32.0.tar.gz"
+  sha256 "cdf772b27fed1f5fabdca2050ec6e8e1d1ff6a08e03660097e8236c2b5f468c0"
 
   bottle do
-    sha1 "93d836d075cefe1174a96d707f3702d7d7643f32" => :mavericks
-    sha1 "0ae5c8ff233727b9b49db1aa3b5b7ebc24665b91" => :mountain_lion
-    sha1 "fb534c99cb0e153a6478f6b065dd179c23205675" => :lion
+    sha256 "63e4ad70b2b93ab4fba0cf8d862563bc5064d92e05232b197da31fdef66c197f" => :yosemite
+    sha256 "88857fd77bdcfcf4e524842f86b27da1dbe6400e0191d6e96e09e1c3d159e2cf" => :mavericks
+    sha256 "f1e5fb8ec78074727e2fe673d98a5803b7fb4f6ea765b793a4158d3e029bb210" => :mountain_lion
   end
 
   head do
+    url "https://github.com/kripken/emscripten.git", :branch => "incoming"
+
     resource "fastcomp" do
       url "https://github.com/kripken/emscripten-fastcomp.git", :branch => "incoming"
     end
@@ -25,21 +23,25 @@ class Emscripten < Formula
 
   stable do
     resource "fastcomp" do
-      url "https://github.com/kripken/emscripten-fastcomp/archive/1.16.0.tar.gz"
-      sha1 "ca10c5a8059fdd321143d8f10c0810176be3d467"
+      url "https://github.com/kripken/emscripten-fastcomp/archive/1.32.0.tar.gz"
+      sha256 "7def74fac4f0afcef40112a2dfea136cefae675935cf0f76a3f6a4cc2cad97dd"
     end
 
     resource "fastcomp-clang" do
-      url "https://github.com/kripken/emscripten-fastcomp-clang/archive/1.16.0.tar.gz"
-      sha1 "768a15d3a8cd9e92f87521cadf3e5f63f3e24fa1"
+      url "https://github.com/kripken/emscripten-fastcomp-clang/archive/1.32.0.tar.gz"
+      sha256 "eaa05e5a57b056163391c2e2f28f00f11158123e049333602e0f666156df0dd5"
     end
   end
 
+  needs :cxx11
+
+  depends_on :python if MacOS.version <= :snow_leopard
   depends_on "node"
   depends_on "closure-compiler" => :optional
   depends_on "yuicompressor"
 
   def install
+    ENV.cxx11
     # OSX doesn't provide a "python2" binary so use "python" instead.
     python2_shebangs = `grep --recursive --files-with-matches ^#!/usr/bin/.*python2$ #{buildpath}`
     python2_shebang_files = python2_shebangs.lines.sort.uniq
@@ -50,7 +52,7 @@ class Emscripten < Formula
     # All files from the repository are required as emscripten is a collection
     # of scripts which need to be installed in the same layout as in the Git
     # repository.
-    libexec.install Dir['*']
+    libexec.install Dir["*"]
 
     (buildpath/"fastcomp").install resource("fastcomp")
     (buildpath/"fastcomp/tools/clang").install resource("fastcomp-clang")
@@ -80,7 +82,8 @@ class Emscripten < Formula
   end
 
   def caveats; <<-EOS.undent
-    Manually set LLVM_ROOT to \"#{opt_prefix}/libexec/llvm/bin\"
+    Manually set LLVM_ROOT to
+      #{opt_libexec}/llvm/bin
     in ~/.emscripten after running `emcc` for the first time.
     EOS
   end

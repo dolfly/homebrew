@@ -1,43 +1,86 @@
-require "formula"
+require "language/go"
 
 class Mongodb < Formula
-  homepage "http://www.mongodb.org/"
-  url "http://downloads.mongodb.org/src/mongodb-src-r2.6.3.tar.gz"
-  sha1 "226ab45e3a2e4d4a749271f1bce393ea8358d3dd"
+  homepage "https://www.mongodb.org/"
 
-  bottle do
-    sha1 "d573717ca7c67455680a6823de210c940faf9ac6" => :mavericks
-    sha1 "f7d2a0711e3ac09fd61bcb243360c1a07fb83233" => :mountain_lion
-    sha1 "b646f64abf52bcc594e690ca2c95143685ade864" => :lion
+  depends_on "go" => :build
+  stable do
+    url "https://fastdl.mongodb.org/src/mongodb-src-r3.0.2.tar.gz"
+    sha256 "010522203cdb9bbff52fbd9fe299b67686bb1256e2e55eb78abf35444f668399"
+    go_resource "github.com/mongodb/mongo-tools" do
+      url "https://github.com/mongodb/mongo-tools.git",
+        :tag => "r3.0.2",
+        :revision => "a914adfcea7d76f07512415eec5cd8308e67318e"
+    end
   end
 
   devel do
-    url "http://downloads.mongodb.org/src/mongodb-src-r2.7.2.tar.gz"
-    sha1 "17cf0970460db72a38b2465936da300fcd5eb917"
+    url "https://fastdl.mongodb.org/src/mongodb-src-r3.1.2.tar.gz"
+    sha256 "ed49023f81242ae0daadaffcf366da6d748dc638826604e2a7150764618fad85"
+    go_resource "github.com/mongodb/mongo-tools" do
+      url "https://github.com/mongodb/mongo-tools.git",
+        :tag => "r3.1.2",
+        :revision => "546c61eee0904fb60d4afef276b9476218053015"
+    end
   end
 
-  head "https://github.com/mongodb/mongo.git"
+  bottle do
+    cellar :any
+    revision 2
+    sha256 "25a97aa9a4b9d535120216b3960e0d34b75f86134c8f71127484140139f40fe7" => :yosemite
+    sha256 "de5f3e5be894da1c8884ab0ebb827890d3bb4c228066cb6ec2f22d993869bf21" => :mavericks
+    sha256 "6b565e5ba85d7deb8461dfcc34c4e5c07532a72f55d7c76af5b74fec84a153f1" => :mountain_lion
+  end
 
   option "with-boost", "Compile using installed boost, not the version shipped with mongodb"
-  depends_on "boost" => :optional
 
+  depends_on "boost" => :optional
+  depends_on "go" => :build
+  depends_on :macos => :snow_leopard
   depends_on "scons" => :build
   depends_on "openssl" => :optional
 
   def install
+    ENV.libcxx if build.devel?
+
+    # New Go tools have their own build script but the server scons "install" target is still
+    # responsible for installing them.
+    Language::Go.stage_deps resources, buildpath/"src"
+
+    cd "src/github.com/mongodb/mongo-tools" do
+      args = %W[]
+      # Once https://github.com/mongodb/mongo-tools/issues/11 is fixed, also set CPATH.
+      # For now, use default include path
+      #
+      if build.with? "openssl"
+        args << "ssl"
+        ENV["LIBRARY_PATH"] = "#{Formula["openssl"].opt_prefix}/lib"
+        # ENV["CPATH"] = "#{Formula["openssl"].opt_prefix}/include"
+      end
+      system "./build.sh", *args
+    end
+
+    mkdir "src/mongo-tools"
+    cp Dir["src/github.com/mongodb/mongo-tools/bin/*"], "src/mongo-tools/"
+
     args = %W[
       --prefix=#{prefix}
       -j#{ENV.make_jobs}
-      --cc=#{ENV.cc}
-      --cxx=#{ENV.cxx}
       --osx-version-min=#{MacOS.version}
     ]
 
-    # --full installs development headers and client library, not just binaries
-    # (only supported pre-2.7)
-    args << "--full" if build.stable?
+    if build.stable?
+      args << "--cc=#{ENV.cc}"
+      args << "--cxx=#{ENV.cxx}"
+    end
+
+    if build.devel?
+      args << "CC=#{ENV.cc}"
+      args << "CXX=#{ENV.cxx}"
+    end
+
     args << "--use-system-boost" if build.with? "boost"
-    args << "--64" if MacOS.prefer_64_bit?
+    args << "--use-new-tools"
 
     if build.with? "openssl"
       args << "--ssl" << "--extrapath=#{Formula["openssl"].opt_prefix}"
@@ -53,15 +96,14 @@ class Mongodb < Formula
   end
 
   def mongodb_conf; <<-EOS.undent
-    # Store data in #{var}/mongodb instead of the default /data/db
-    dbpath = #{var}/mongodb
-
-    # Append logs to #{var}/log/mongodb/mongo.log
-    logpath = #{var}/log/mongodb/mongo.log
-    logappend = true
-
-    # Only accept local connections
-    bind_ip = 127.0.0.1
+    systemLog:
+      destination: file
+      path: #{var}/log/mongodb/mongo.log
+      logAppend: true
+    storage:
+      dbPath: #{var}/mongodb
+    net:
+      bindIp: 127.0.0.1
     EOS
   end
 
@@ -93,12 +135,12 @@ class Mongodb < Formula
       <key>HardResourceLimits</key>
       <dict>
         <key>NumberOfFiles</key>
-        <integer>1024</integer>
+        <integer>4096</integer>
       </dict>
       <key>SoftResourceLimits</key>
       <dict>
         <key>NumberOfFiles</key>
-        <integer>1024</integer>
+        <integer>4096</integer>
       </dict>
     </dict>
     </plist>

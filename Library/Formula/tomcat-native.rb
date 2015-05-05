@@ -1,18 +1,32 @@
 require 'formula'
 
 class TomcatNative < Formula
-  homepage 'http://tomcat.apache.org/native-doc/'
-  url 'http://www.apache.org/dyn/closer.cgi?path=tomcat/tomcat-connectors/native/1.1.30/source/tomcat-native-1.1.30-src.tar.gz'
-  sha1 '07fca7c3e7b8301fc80b0e3c317e642a3616142a'
+  homepage 'https://tomcat.apache.org/native-doc/'
+  url 'https://www.apache.org/dyn/closer.cgi?path=tomcat/tomcat-connectors/native/1.1.33/source/tomcat-native-1.1.33-src.tar.gz'
+  sha1 'c7626c8e5144ee8e958175c4cd034cef90eab1ed'
+
+  bottle do
+    cellar :any
+    sha256 "1649e2b91dab7a9d2f3399fa713478f5a68f8b55a5a59a5007257797c4611386" => :yosemite
+  end
+
+  option "with-apr", "Include APR support via Homebrew"
 
   depends_on "libtool" => :build
   depends_on "tomcat" => :recommended
+  depends_on :java => "1.7"
   depends_on "openssl"
+  depends_on "apr" => :optional
 
   def install
     cd "jni/native" do
+      if build.with? 'apr'
+        apr_path = "#{Formula['apr'].prefix}"
+      else
+        apr_path = "#{MacOS.sdk_path}/usr"
+      end
       system "./configure", "--prefix=#{prefix}",
-                            "--with-apr=#{MacOS.sdk_path}/usr",
+                            "--with-apr=#{apr_path}",
                             "--with-java-home=#{`/usr/libexec/java_home`.chomp}",
                             "--with-ssl=#{Formula["openssl"].prefix}"
 

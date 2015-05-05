@@ -1,14 +1,15 @@
-require "formula"
-
 class Boot2docker < Formula
   homepage "https://github.com/boot2docker/boot2docker-cli"
-  url "https://github.com/boot2docker/boot2docker-cli.git", :tag => "v1.0.1"
-  head "https://github.com/boot2docker/boot2docker-cli.git", :branch => "master"
+  # Boot2docker and docker are generally updated at the same time.
+  # Please update the version of docker too
+  url "https://github.com/boot2docker/boot2docker-cli.git", :tag => "v1.6.0",
+    :revision => "9894ae9dbe350c5b96602ed8b9bddb827d9b322b"
+  head "https://github.com/boot2docker/boot2docker-cli.git"
 
   bottle do
-    sha1 "340e6d70eb17687b54f4c6072e731d516aeb3d91" => :mavericks
-    sha1 "f97544fd168253ae16bd6db365c002dae3925d49" => :mountain_lion
-    sha1 "7a950d1aaae96c9f05161155dd33ab75c01a778f" => :lion
+    sha256 "c2601ede439f44981e76a1e4b015f02741567f13a236f9cca297e51636a201ed" => :yosemite
+    sha256 "b030eecdf642ba8a0f39179eb6da4bc705f3f0f64ee6d4da675844a4216e4466" => :mavericks
+    sha256 "4b60130534c13092d8b603a7171bb42269cdea621023664762544b583658c6be" => :mountain_lion
   end
 
   depends_on "docker" => :recommended
@@ -20,12 +21,29 @@ class Boot2docker < Formula
     cd "src/github.com/boot2docker/boot2docker-cli" do
       ENV["GOPATH"] = buildpath
       system "go", "get", "-d"
-
-      ENV["GIT_DIR"] = cached_download/".git"
       system "make", "goinstall"
     end
 
     bin.install "bin/boot2docker-cli" => "boot2docker"
+  end
+
+  def plist; <<-EOS.undent
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+      <key>Label</key>
+      <string>#{plist_name}</string>
+      <key>ProgramArguments</key>
+      <array>
+        <string>#{opt_bin}/boot2docker</string>
+        <string>up</string>
+      </array>
+      <key>RunAtLoad</key>
+      <true/>
+    </dict>
+    </plist>
+    EOS
   end
 
   test do
