@@ -1,26 +1,35 @@
 class Task < Formula
-  homepage "http://www.taskwarrior.org/"
-  url "http://taskwarrior.org/download/task-2.4.3.tar.gz"
-  sha1 "2a0c1519b1b572c91f8d6ee489b1250a993a3e86"
-  head "https://git.tasktools.org/scm/tm/task.git", :branch => "2.4.4", :shallow => false
+  desc "Feature-rich console based todo list manager"
+  homepage "https://taskwarrior.org/"
+  url "https://taskwarrior.org/download/task-2.5.0.tar.gz"
+  sha256 "4d8e67415a6993108c11b8eeef99b76a991af11b22874adbb7ae367e09334636"
+  head "https://git.tasktools.org/scm/tm/task.git", :branch => "2.5.1", :shallow => false
 
   bottle do
-    sha256 "8fe979d6645f9695daa55fda3ac068d2aa624c871def1c4423d91bf19f39c619" => :yosemite
-    sha256 "b7c0fd1dad5721a38189d5ed29866579312316a51a1d423b6fad091c38478739" => :mavericks
-    sha256 "498277be998aa4042c47fe3c1f4c9ab3291e946389aae52daa60bbde25d9cb1f" => :mountain_lion
+    revision 1
+    sha256 "b5215c6498e14ce80811d34ffcdeb0097e5ffe699f4bd93bc845e12cf9df3aa4" => :el_capitan
+    sha256 "026ac81ac65d3c34e7345e72d80c756521cfda7e19bb5148a7608bdab274d0ef" => :yosemite
+    sha256 "8651183eacf5d5c23a84d3593a67fb24a0dae92c03b6664d03ee0952b5eb6ae4" => :mavericks
   end
 
+  option "without-gnutls", "Don't use gnutls; disables sync support"
+
   depends_on "cmake" => :build
-  depends_on "gnutls" => :optional
+  depends_on "gnutls" => :recommended
 
   def install
-    system "cmake", ".", *std_cmake_args
+    args = std_cmake_args
+    args << "-DENABLE_SYNC=OFF" if build.without? "gnutls"
+    system "cmake", ".", *args
     system "make", "install"
     bash_completion.install "scripts/bash/task.sh"
     zsh_completion.install "scripts/zsh/_task"
+    fish_completion.install "scripts/fish/task.fish"
   end
 
   test do
-    system "#{bin}/task", "--version"
+    touch testpath/".taskrc"
+    system "#{bin}/task", "add", "Write", "a", "test"
+    assert_match "Write a test", shell_output("#{bin}/task list")
   end
 end

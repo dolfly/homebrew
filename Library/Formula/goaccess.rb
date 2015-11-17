@@ -1,24 +1,24 @@
-require "formula"
-
 class Goaccess < Formula
-  homepage "http://goaccess.prosoftcorp.com/"
-  url "http://tar.goaccess.io/goaccess-0.9.tar.gz"
-  sha1 "fd18df44e09d4fac4ea90f1552e8ff9da0d6633c"
+  desc "Log analyzer and interactive viewer for the Apache Webserver"
+  homepage "http://goaccess.io/"
+  url "http://tar.goaccess.io/goaccess-0.9.6.tar.gz"
+  sha256 "e848064c8555f95e770aa1c0475c784c094b42e4ae53ff852975f6498d8f649a"
 
   bottle do
-    sha256 "d768a98f42f9ec841328c859d6505e80904ec3c28e3bba38532ee67425d994d5" => :yosemite
-    sha256 "215ca9e4613a4ee206c17b3ec13bb46f610830102fdd3ac49c2c5c4f5f48ce3a" => :mavericks
-    sha256 "f1de0dde3a407eb515de8ca4faa40720e2f3c735cc8e3c9fec1f0d9bcecfbf31" => :mountain_lion
+    sha256 "b662cc46389aa92c3faeb233c03ed34f262e4c23fb8485245b63b10d4e8debe6" => :el_capitan
+    sha256 "93be499907187b525b43c5c81846f011fd1a13807298730e14a0519909e68342" => :yosemite
+    sha256 "9d661644f8617be774cf6a9fca9d363756604f4abb2133761ee798dd8216a062" => :mavericks
   end
-
-  option "with-geoip", "Enable IP location information using GeoIP"
-  deprecated_option "enable-geoip" => "with-geoip"
 
   head do
     url "https://github.com/allinurl/goaccess.git"
     depends_on "autoconf" => :build
     depends_on "automake" => :build
   end
+
+  option "with-geoip", "Enable IP location information using GeoIP"
+
+  deprecated_option "enable-geoip" => "with-geoip"
 
   depends_on "pkg-config" => :build
   depends_on "glib"
@@ -35,6 +35,18 @@ class Goaccess < Formula
     args << "--enable-geoip" if build.with? "geoip"
 
     system "./configure", *args
-    system "make install"
+    system "make", "install"
+  end
+
+  test do
+    require "json"
+
+    (testpath/"access.log").write <<-EOS.undent
+      127.0.0.1 - - [04/May/2015:15:48:17 +0200] "GET / HTTP/1.1" 200 612 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36"
+    EOS
+
+    output = shell_output("#{bin}/goaccess --time-format=%T --date-format=%d/%b/%Y --log-format='%h %^[%d:%t %^] \"%r\" %s %b \"%R\" \"%u\"' -f access.log -o json 2>/dev/null")
+
+    assert_equal "Chrome", JSON.parse(output)["browsers"][0]["data"]
   end
 end

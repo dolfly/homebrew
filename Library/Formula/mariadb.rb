@@ -1,30 +1,18 @@
 class Mariadb < Formula
+  desc "Drop-in replacement for MySQL"
   homepage "https://mariadb.org/"
-  url "http://ftp.osuosl.org/pub/mariadb/mariadb-10.0.17/source/mariadb-10.0.17.tar.gz"
-  sha1 "240253b3ee21dea5e2f501778e8ee72b32a5d052"
+  url "http://ftp.osuosl.org/pub/mariadb/mariadb-10.1.8/source/mariadb-10.1.8.tar.gz"
+  sha256 "7cbf6a4649aa6dc9cd1dc24424ade7b994de78582ce4d47ca0f4cd1c4c003bfa"
 
   bottle do
-    revision 1
-    sha256 "5d592bf32afc34b950da714130cc9bc9790b8f30eae201ad2dbc22de249aa4f7" => :yosemite
-    sha256 "973a4e379af98525431e4adce16c85ed73634d59f26008b9524db2ef07b0cc1f" => :mavericks
-    sha256 "ee7ffc04be67f0f1100119a75b4b357e5e823164dab9266b611a36b74312d2a5" => :mountain_lion
+    sha256 "a369229d2063de79b1e1f55a69b4777b28160f66ddc276c8e94641e88a389780" => :el_capitan
+    sha256 "6a89f3dc372591100980b9999dd9b405f97c7da5b0a5c36a371a03cbd73d91d7" => :yosemite
+    sha256 "0dbf52e1cd9ff451957f102964fd52723127b01ebca656463f6e6d2fe6073647" => :mavericks
   end
 
-  devel do
-    url "http://ftp.osuosl.org/pub/mariadb/mariadb-10.1.4/source/mariadb-10.1.4.tar.gz"
-    sha256 "14cc92414b2c3822923977a6fb544593498dbb5005044db33c193511757d411c"
-
-    patch do
-      # https://mariadb.atlassian.net/browse/MDEV-8073
-      # upstream patch, fixed in 10.1.5
-      url "https://github.com/MariaDB/server/commit/ff1e0821d1174428dd70331bd864de1334ab0567.diff"
-      sha256 "552fe747e05de7c0ffa8af7d0476e74f3bb4b54bb8fa0609b94a1c2147728ebb"
-    end
-  end
-
-  depends_on "cmake" => :build
-  depends_on "pidof" unless MacOS.version >= :mountain_lion
-  depends_on "openssl"
+  # fix compilation failure with clang in mroonga storage engine
+  # https://mariadb.atlassian.net/projects/MDEV/issues/MDEV-8551
+  patch :DATA
 
   option :universal
   option "with-tests", "Keep test when installing"
@@ -37,10 +25,15 @@ class Mariadb < Formula
 
   deprecated_option "enable-local-infile" => "with-local-infile"
 
+  depends_on "cmake" => :build
+  depends_on "pidof" unless MacOS.version >= :mountain_lion
+  depends_on "openssl"
+
   conflicts_with "mysql", "mysql-cluster", "percona-server",
     :because => "mariadb, mysql, and percona install the same binaries."
   conflicts_with "mysql-connector-c",
     :because => "both install MySQL client libraries"
+  conflicts_with "mytop", :because => "both install `mytop` binaries"
 
   def install
     # Don't hard-code the libtool path. See:
@@ -81,11 +74,7 @@ class Mariadb < Formula
     ]
 
     # disable TokuDB, which is currently not supported on Mac OS X
-    if build.stable?
-      args << "-DWITHOUT_TOKUDB=1"
-    else
-      args << "-DPLUGIN_TOKUDB=NO"
-    end
+    args << "-DPLUGIN_TOKUDB=NO"
 
     args << "-DWITH_UNIT_TESTS=OFF" if build.without? "tests"
 
@@ -96,22 +85,10 @@ class Mariadb < Formula
     args << "-DWITH_READLINE=yes" if build.without? "libedit"
 
     # Compile with ARCHIVE engine enabled if chosen
-    if build.with? "archive-storage-engine"
-      if build.stable?
-        args << "-DWITH_ARCHIVE_STORAGE_ENGINE=1"
-      else
-        args << "-DPLUGIN_ARCHIVE=YES"
-      end
-    end
+    args << "-DPLUGIN_ARCHIVE=YES" if build.with? "archive-storage-engine"
 
     # Compile with BLACKHOLE engine enabled if chosen
-    if build.with? "blackhole-storage-engine"
-      if build.stable?
-        args << "-DWITH_BLACKHOLE_STORAGE_ENGINE=1"
-      else
-        args << "-DPLUGIN_BLACKHOLE=YES"
-      end
-    end
+    args << "-DPLUGIN_BLACKHOLE=YES" if build.with? "blackhole-storage-engine"
 
     # Make universal for binding to universal applications
     if build.universal?
@@ -152,20 +129,18 @@ class Mariadb < Formula
 
     bin.install_symlink prefix/"support-files/mysql.server"
 
-    if build.devel?
-      # Move sourced non-executable out of bin into libexec
-      libexec.mkpath
-      libexec.install "#{bin}/wsrep_sst_common"
-      # Fix up references to wsrep_sst_common
-      %W[
-        wsrep_sst_mysqldump
-        wsrep_sst_rsync
-        wsrep_sst_xtrabackup
-        wsrep_sst_xtrabackup-v2
-      ].each do |f|
-        inreplace "#{bin}/#{f}" do |s|
-          s.gsub!("$(dirname $0)/wsrep_sst_common", "#{libexec}/wsrep_sst_common")
-        end
+    # Move sourced non-executable out of bin into libexec
+    libexec.mkpath
+    libexec.install "#{bin}/wsrep_sst_common"
+    # Fix up references to wsrep_sst_common
+    %W[
+      wsrep_sst_mysqldump
+      wsrep_sst_rsync
+      wsrep_sst_xtrabackup
+      wsrep_sst_xtrabackup-v2
+    ].each do |f|
+      inreplace "#{bin}/#{f}" do |s|
+        s.gsub!("$(dirname $0)/wsrep_sst_common", "#{libexec}/wsrep_sst_common")
       end
     end
   end
@@ -225,3 +200,19 @@ class Mariadb < Formula
     end
   end
 end
+__END__
+diff --git a/storage/mroonga/vendor/groonga/CMakeLists.txt b/storage/mroonga/vendor/groonga/CMakeLists.txt
+index ebe7f6b..609f77d 100644
+--- a/storage/mroonga/vendor/groonga/CMakeLists.txt
++++ b/storage/mroonga/vendor/groonga/CMakeLists.txt
+@@ -192,6 +192,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
+   check_build_flag("-Wno-clobbered")
+ endif()
+
++if(CMAKE_COMPILER_IS_CLANGCXX)
++  MY_CHECK_AND_SET_COMPILER_FLAG("-fexceptions")
++endif()
++
+ if(NOT DEFINED CMAKE_C_COMPILE_OPTIONS_PIC)
+   # For old CMake
+   if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGCXX)

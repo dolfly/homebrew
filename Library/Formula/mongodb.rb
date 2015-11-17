@@ -1,46 +1,50 @@
 require "language/go"
 
 class Mongodb < Formula
+  desc "High-performance, schema-free, document-oriented database"
   homepage "https://www.mongodb.org/"
 
-  depends_on "go" => :build
   stable do
-    url "https://fastdl.mongodb.org/src/mongodb-src-r3.0.2.tar.gz"
-    sha256 "010522203cdb9bbff52fbd9fe299b67686bb1256e2e55eb78abf35444f668399"
-    go_resource "github.com/mongodb/mongo-tools" do
-      url "https://github.com/mongodb/mongo-tools.git",
-        :tag => "r3.0.2",
-        :revision => "a914adfcea7d76f07512415eec5cd8308e67318e"
-    end
-  end
+    url "https://fastdl.mongodb.org/src/mongodb-src-r3.0.7.tar.gz"
+    sha256 "2d25bae7c3bfb3c0e168fcad526dc212da72faaeae6d1573db631cacb172a7e7"
 
-  devel do
-    url "https://fastdl.mongodb.org/src/mongodb-src-r3.1.2.tar.gz"
-    sha256 "ed49023f81242ae0daadaffcf366da6d748dc638826604e2a7150764618fad85"
     go_resource "github.com/mongodb/mongo-tools" do
       url "https://github.com/mongodb/mongo-tools.git",
-        :tag => "r3.1.2",
-        :revision => "546c61eee0904fb60d4afef276b9476218053015"
+        :tag => "r3.0.7",
+        :revision => "134c548992e8248c7a7c53777a652cbb2490ab6c"
     end
   end
 
   bottle do
-    cellar :any
-    revision 2
-    sha256 "25a97aa9a4b9d535120216b3960e0d34b75f86134c8f71127484140139f40fe7" => :yosemite
-    sha256 "de5f3e5be894da1c8884ab0ebb827890d3bb4c228066cb6ec2f22d993869bf21" => :mavericks
-    sha256 "6b565e5ba85d7deb8461dfcc34c4e5c07532a72f55d7c76af5b74fec84a153f1" => :mountain_lion
+    cellar :any_skip_relocation
+    sha256 "a73192d68f1ba6ec903498237167fe483ac298572b319c5cfa63d5f3452dfffd" => :el_capitan
+    sha256 "bdbfc4de1d774e65242189c9bc47cb2591120a3220faca5761119166219c6dad" => :yosemite
+    sha256 "4f4b3c719811e978b4f1791b9d16c27b37e86e1be71a924629d5d386fbb19518" => :mavericks
+  end
+
+  devel do
+    url "https://fastdl.mongodb.org/src/mongodb-src-r3.1.9.tar.gz"
+    sha256 "2caad29cfc94d029ba6af08f02158523863fb03f81094ff1a76789d70af31a86"
+
+    go_resource "github.com/mongodb/mongo-tools" do
+      url "https://github.com/mongodb/mongo-tools.git",
+        :tag => "r3.1.9",
+        :revision => "44b34407a8004b7801ae2bbdc664a8e54ea2a362"
+    end
   end
 
   option "with-boost", "Compile using installed boost, not the version shipped with mongodb"
 
+  needs :cxx11
+
   depends_on "boost" => :optional
   depends_on "go" => :build
-  depends_on :macos => :snow_leopard
+  depends_on :macos => :mountain_lion
   depends_on "scons" => :build
   depends_on "openssl" => :optional
 
   def install
+    ENV.cxx11 if MacOS.version < :mavericks
     ENV.libcxx if build.devel?
 
     # New Go tools have their own build script but the server scons "install" target is still
@@ -48,14 +52,15 @@ class Mongodb < Formula
     Language::Go.stage_deps resources, buildpath/"src"
 
     cd "src/github.com/mongodb/mongo-tools" do
+      # https://github.com/Homebrew/homebrew/issues/40136
+      inreplace "build.sh", '-ldflags "-X github.com/mongodb/mongo-tools/common/options.Gitspec `git rev-parse HEAD`"', ""
+
       args = %W[]
-      # Once https://github.com/mongodb/mongo-tools/issues/11 is fixed, also set CPATH.
-      # For now, use default include path
-      #
+
       if build.with? "openssl"
         args << "ssl"
         ENV["LIBRARY_PATH"] = "#{Formula["openssl"].opt_prefix}/lib"
-        # ENV["CPATH"] = "#{Formula["openssl"].opt_prefix}/include"
+        ENV["CPATH"] = "#{Formula["openssl"].opt_prefix}/include"
       end
       system "./build.sh", *args
     end
@@ -81,6 +86,7 @@ class Mongodb < Formula
 
     args << "--use-system-boost" if build.with? "boost"
     args << "--use-new-tools"
+    args << "--disable-warnings-as-errors" if MacOS.version >= :yosemite
 
     if build.with? "openssl"
       args << "--ssl" << "--extrapath=#{Formula["openssl"].opt_prefix}"

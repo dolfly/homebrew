@@ -1,12 +1,13 @@
 class Mysql < Formula
-  homepage "https://dev.mysql.com/doc/refman/5.6/en/"
-  url "https://cdn.mysql.com/Downloads/MySQL-5.6/mysql-5.6.24.tar.gz"
-  sha256 "37e27305b67d76883c5902dce59c89d596beee9dca7dbadd4a2e117f8101dfeb"
+  desc "Open source relational database management system"
+  homepage "https://dev.mysql.com/doc/refman/5.7/en/"
+  url "https://cdn.mysql.com/Downloads/MySQL-5.7/mysql-5.7.9.tar.gz"
+  sha256 "315342f5bee1179548cecad2d776cd7758092fd2854024e60a3a5007feba34e0"
 
   bottle do
-    sha256 "09add752ac02612bf95e696500e74fdfd281f54a98faf5ae49f135eb60c34f61" => :yosemite
-    sha256 "b6ea5c4f3eebbfeba9710aeaedefe60f6a6b280b1a48834b9a5387d4df71fd5c" => :mavericks
-    sha256 "d1c79bbf500f6845b0b29f169267e80280f4993f8abf524fd2d888127347233d" => :mountain_lion
+    sha256 "09223ec948422d79df91995e46249df519d114f2942f7fb807302f2850a0d7f3" => :el_capitan
+    sha256 "a80ec157cc9bd9e23cc588fee34c89d54acd7ad36df66666617d5b1289e7c01c" => :yosemite
+    sha256 "cb9b66831bd93c857715d9b946916a30a0eb1fcc2c68340c2232bacde8433d4a" => :mavericks
   end
 
   option :universal
@@ -25,6 +26,7 @@ class Mysql < Formula
   depends_on "cmake" => :build
   depends_on "pidof" unless MacOS.version >= :mountain_lion
   depends_on "openssl"
+  depends_on "boost"
 
   conflicts_with "mysql-cluster", "mariadb", "percona-server",
     :because => "mysql, mariadb, and percona install the same binaries."
@@ -37,7 +39,7 @@ class Mysql < Formula
   end
 
   def datadir
-    var+"mysql"
+    var/"mysql"
   end
 
   def install
@@ -51,7 +53,7 @@ class Mysql < Formula
     # compilation of gems and other software that queries `mysql-config`.
     ENV.minimal_optimization
 
-    # -DINSTALL_* are relative to prefix
+    # -DINSTALL_* are relative to `CMAKE_INSTALL_PREFIX` (`prefix`)
     args = %W[
       .
       -DCMAKE_INSTALL_PREFIX=#{prefix}
@@ -109,9 +111,12 @@ class Mysql < Formula
 
     # Don't create databases inside of the prefix!
     # See: https://github.com/Homebrew/homebrew/issues/4975
-    rm_rf prefix+"data"
+    rm_rf prefix/"data"
 
-    # Link the setup script into bin
+    # Perl script was removed in 5.7.9 so install C++ binary instead.
+    # Binary is deprecated & will be removed in future upstream
+    # update but is still required for mysql-test-run to pass in test.
+    (prefix/"scripts").install "client/mysql_install_db"
     bin.install_symlink prefix/"scripts/mysql_install_db"
 
     # Fix up the control script and link into bin
@@ -122,19 +127,14 @@ class Mysql < Formula
     end
 
     bin.install_symlink prefix/"support-files/mysql.server"
-
-    # Move mysqlaccess to libexec
-    libexec.mkpath
-    mv "#{bin}/mysqlaccess", libexec
-    mv "#{bin}/mysqlaccess.conf", libexec
   end
 
   def post_install
     # Make sure the datadir exists
     datadir.mkpath
-    unless File.exist? "#{datadir}/mysql/user.frm"
+    unless (datadir/"mysql/user.frm").exist?
       ENV["TMPDIR"] = nil
-      system "#{bin}/mysql_install_db", "--verbose", "--user=#{ENV["USER"]}",
+      system bin/"mysqld", "--initialize", "--user=#{ENV["USER"]}",
         "--basedir=#{prefix}", "--datadir=#{datadir}", "--tmpdir=/tmp"
     end
   end
@@ -175,8 +175,9 @@ class Mysql < Formula
   end
 
   test do
-    (prefix+"mysql-test").cd do
-      system "./mysql-test-run.pl", "status"
+    system "/bin/sh", "-n", "#{bin}/mysqld_safe"
+    (prefix/"mysql-test").cd do
+      system "./mysql-test-run.pl", "status", "--vardir=#{testpath}"
     end
   end
 end

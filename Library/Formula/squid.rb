@@ -1,21 +1,20 @@
-require "formula"
-
 class Squid < Formula
+  desc "Advanced proxy caching server for HTTP, HTTPS, FTP, and Gopher"
   homepage "http://www.squid-cache.org/"
-  url "http://www.squid-cache.org/Versions/v3/3.4/squid-3.4.12.tar.bz2"
-  sha1 "e5291d1a556313712410cf6297f08e895a2d679a"
+  url "http://www.squid-cache.org/Versions/v3/3.5/squid-3.5.11.tar.xz"
+  sha256 "c26211b8e349fd9a5fd357da33074ff6523c111024dd3a5a1f77153538aa40cf"
 
   bottle do
-    sha256 "9db04b2b64b0e14f1f0698d6fc35734bb4f52706e4dcd54dc6a897810eb15813" => :yosemite
-    sha256 "8f7dcd0316187261706152b2b770eb9a647501b59b48fe85e07d624d32a26cb9" => :mavericks
-    sha256 "dc06c4c6d3d387eaf6d4901870b1ca7f07c816e2ba6fcf69b10dcb9610fdd922" => :mountain_lion
+    sha256 "638e48a3967edac79d2db85a796ad1ef77df696430778500556eb0442045c091" => :el_capitan
+    sha256 "7f97ddfe5a85c436bf394f50195f2649d44be18b3293a4b656914c39ccd59fcc" => :yosemite
+    sha256 "f400d08e7a6259d1fab73d3acec0295b5ba016c4d7cc83d5df55b32d2502f5b4" => :mavericks
   end
 
   depends_on "openssl"
 
   def install
     # http://stackoverflow.com/questions/20910109/building-squid-cache-on-os-x-mavericks
-    ENV.append "LDFLAGS",  "-lresolv"
+    ENV.append "LDFLAGS", "-lresolv"
 
     # For --disable-eui, see:
     # http://squid-web-proxy-cache.1019090.n4.nabble.com/ERROR-ARP-MAC-EUI-operations-not-supported-on-this-operating-system-td4659335.html
@@ -24,15 +23,17 @@ class Squid < Formula
       --disable-dependency-tracking
       --prefix=#{prefix}
       --localstatedir=#{var}
+      --sysconfdir=#{etc}
       --enable-ssl
       --enable-ssl-crtd
       --disable-eui
       --enable-pf-transparent
       --with-included-ltdl
+      --with-openssl
     ]
 
     system "./configure", *args
-    system "make install"
+    system "make", "install"
   end
 
   def plist; <<-EOS.undent
@@ -57,5 +58,14 @@ class Squid < Formula
     </dict>
     </plist>
     EOS
+  end
+
+  test do
+    # This test should start squid and then check it runs correctly.
+    # However currently dies under the sandbox and "Current Directory"
+    # seems to be set hard on HOMEBREW_PREFIX/var/cache/squid.
+    # https://github.com/Homebrew/homebrew/pull/44348#issuecomment-143477353
+    # If you can fix this, please submit a PR. Thank you!
+    assert_match version.to_s, shell_output("#{sbin}/squid -v")
   end
 end

@@ -1,13 +1,14 @@
 class GsettingsDesktopSchemas < Formula
+  desc "GSettings schemas for desktop components"
   homepage "https://download.gnome.org/sources/gsettings-desktop-schemas/"
-  url "https://download.gnome.org/sources/gsettings-desktop-schemas/3.14/gsettings-desktop-schemas-3.14.0.tar.xz"
-  sha256 "cf3ba58f6257155080b1872b4a6ce4a2424bb7af3f08e607b428cb47b065f2d7"
+  url "https://download.gnome.org/sources/gsettings-desktop-schemas/3.18/gsettings-desktop-schemas-3.18.1.tar.xz"
+  sha256 "258713b2a3dc6b6590971bcfc81f98d78ea9827d60e2f55ffbe40d9cd0f99a1a"
 
   bottle do
-    revision 2
-    sha256 "ed713e36bb658c3ac715a43ac505389a427f06540e47a2521f7291875ac1d4fa" => :yosemite
-    sha256 "45e1e8d292bd2356cfcbc7090fb189536c974f73881cef20f2fdb40c6c6c013c" => :mavericks
-    sha256 "b1820bdd931682580c900920d0cf1edb4c1a0d86755dbb6dd310f5552f72879a" => :mountain_lion
+    cellar :any_skip_relocation
+    sha256 "a690c0ea4800545e96753020eed7c1e81751a93320f79d12e37fc75d4907e8d6" => :el_capitan
+    sha256 "a4a787a33ec4b84eaa6fce08fea0c81bbef4babb59534fcdf94eec76b9a1ac4a" => :yosemite
+    sha256 "ce52e45a24271c8515eccabc0ed99fa0d83d54c06c65b408140d52891afcf978" => :mavericks
   end
 
   depends_on "pkg-config" => :build

@@ -1,16 +1,17 @@
 class Bullet < Formula
+  desc "Physics SDK"
   homepage "http://bulletphysics.org/wordpress/"
-  url "https://github.com/bulletphysics/bullet3/archive/2.82.tar.gz"
-  sha256 "93ffcdfdd7aa67159fc18d336456945538a6602e3cd318eed9963280620b55bd"
+  url "https://github.com/bulletphysics/bullet3/archive/2.83.6.tar.gz"
+  sha256 "dcd5448f31ded71c7bd22fddd7d816ac590ae7b97e1fdda8d1253f8ff3655571"
   head "https://github.com/bulletphysics/bullet3.git"
 
   bottle do
-    sha256 "ea68461df51601ae10349cf50423cab3beae2a3d932dcb4fb5e0447c953b4102" => :yosemite
-    sha256 "dc31c9602d2bbea68a0b899e20396bb4d500d1439407407c64175a6d76e57abf" => :mavericks
-    sha256 "66980c300d484edad267776475277592681ed782e9514bafcdd32ec74f04ced3" => :mountain_lion
+    cellar :any_skip_relocation
+    sha256 "1d9119bc35c1349dd67776d358abd8f62ffd4cb2a8ada2f3dbd045ee5cfc8e22" => :el_capitan
+    sha256 "79e79f3dcc6dbe62ca2422df12469a545be28ee150eaba3d67fa66826da7c730" => :yosemite
+    sha256 "bc42f536182a138dc1007df0ab7188a9c8fbaa6e6c9ac27d1ed550ab1372816f" => :mavericks
+    sha256 "f63b943a84faa74f80756ba3aae7b3c12f6a934a50953fcf367a7f088c769615" => :mountain_lion
   end
-
-  depends_on "cmake" => :build
 
   deprecated_option "framework" => "with-framework"
   deprecated_option "shared" => "with-shared"
@@ -24,6 +25,8 @@ class Bullet < Formula
   option "with-demo",             "Build demo applications"
   option "with-extra",            "Build extra library"
   option "with-double-precision", "Use double precision"
+
+  depends_on "cmake" => :build
 
   def install
     args = []
@@ -44,11 +47,15 @@ class Bullet < Formula
 
     args << "-DUSE_DOUBLE_PRECISION=ON" if build.with? "double-precision"
 
-    args << "-DBUILD_DEMOS=OFF" if build.without? "demo"
+    # Related to the following warnings when building --with-shared --with-demo
+    # https://gist.github.com/scpeters/6afc44f0cf916b11a226
+    if build.with?("demo") && (build.with?("shared") || build.with?("framework"))
+      raise "Demos cannot be installed with shared libraries or framework."
+    end
 
-    # Demos require extras, see:
-    # https://code.google.com/p/bullet/issues/detail?id=767&thanks=767&ts=1384333052
-    if build.with?("extra") || build.with?("demo")
+    args << "-DBUILD_BULLET2_DEMOS=OFF" if build.without? "demo"
+
+    if build.with?("extra")
       args << "-DINSTALL_EXTRA_LIBS=ON"
     else
       args << "-DBUILD_EXTRAS=OFF"
@@ -58,7 +65,7 @@ class Bullet < Formula
     system "make"
     system "make", "install"
 
-    prefix.install "Demos" if build.with? "demo"
+    prefix.install "examples" if build.with? "demo"
     prefix.install "Extras" if build.with? "extra"
   end
 

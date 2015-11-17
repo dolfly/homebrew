@@ -1,17 +1,18 @@
 class Docker < Formula
+  desc "Pack, ship and run any application as a lightweight container"
   homepage "https://www.docker.com/"
-  # Boot2docker and docker are generally updated at the same time.
-  # Please update the version of boot2docker too
-  url "https://github.com/docker/docker.git", :tag => "v1.6.0",
-    :revision => "47496519da9664202d900d3635bb840509fa9647"
+  url "https://github.com/docker/docker.git", :tag => "v1.9.0",
+                                              :revision => "76d6bc9a9f1690e16f3721ba165364688b626de2"
+  head "https://github.com/docker/docker.git"
 
   bottle do
-    cellar :any
-    sha256 "ef7f16ba999be4b9850507d67499e61520acb9924b5d24d98aeba30c7bc5bf24" => :yosemite
-    sha256 "1996e13b08d24be9148e13ac75a3efad1afb616c02c397a064be833465bc1484" => :mavericks
-    sha256 "d1b458d5266ba2d5ea5b2a2631490de53bce3343a406da1f05232855e36ef804" => :mountain_lion
+    cellar :any_skip_relocation
+    sha256 "ec291732230609b2bb5c756e5cf3b021347f856c70371f343deb462479b2e3c7" => :el_capitan
+    sha256 "e99070e33cc77c687cf09cdd10ebd71d04ffa8a9026ed90cc7a64c108a96088e" => :yosemite
+    sha256 "b7247cb6ab7a55a08ea7a4c66d8b480cd5550e1cb1e610f2452e48e5836029e9" => :mavericks
   end
 
+  option "with-experimental", "Enable experimental features"
   option "without-completions", "Disable bash/zsh completions"
 
   depends_on "go" => :build
@@ -19,12 +20,16 @@ class Docker < Formula
   def install
     ENV["AUTO_GOPATH"] = "1"
     ENV["DOCKER_CLIENTONLY"] = "1"
+    ENV["DOCKER_EXPERIMENTAL"] = "1" if build.with? "experimental"
 
     system "hack/make.sh", "dynbinary"
-    bin.install "bundles/#{version}/dynbinary/docker-#{version}" => "docker"
+
+    build_version = build.head? ? File.read("VERSION").chomp : version
+    bin.install "bundles/#{build_version}/dynbinary/docker-#{build_version}" => "docker"
 
     if build.with? "completions"
       bash_completion.install "contrib/completion/bash/docker"
+      fish_completion.install "contrib/completion/fish/docker.fish"
       zsh_completion.install "contrib/completion/zsh/_docker"
     end
   end

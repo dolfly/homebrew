@@ -1,4 +1,5 @@
 class NumUtils < Formula
+  desc "Programs for dealing with numbers from the command-line"
   homepage "http://suso.suso.org/programs/num-utils/"
   url "http://suso.suso.org/programs/num-utils/downloads/num-utils-0.5.tar.gz"
   mirror "https://mirrors.kernel.org/debian/pool/main/n/num-utils/num-utils_0.5.orig.tar.gz"
@@ -12,6 +13,8 @@ class NumUtils < Formula
   end
 
   conflicts_with "normalize", :because => "both install `normalize` binaries"
+  conflicts_with "crush-tools", :because => "both install an `range` binary"
+  conflicts_with "argyll-cms", :because => "both install `average` binaries"
 
   def install
     %w[average bound interval normalize numgrep numprocess numsum random range round].each do |p|

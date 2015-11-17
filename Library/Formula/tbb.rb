@@ -1,14 +1,15 @@
 class Tbb < Formula
-  homepage "http://www.threadingbuildingblocks.org/"
-  url "https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb43_20150424oss_src.tgz"
-  sha1 "21a3176bf09677b795df2c529065c265a2ad72ae"
-  version "4.3-20150424"
+  desc "Rich and complete approach to parallelism in C++"
+  homepage "https://www.threadingbuildingblocks.org/"
+  url "https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20150728oss_src.tgz"
+  sha256 "e9534f3238e6f7b34f9d0a78cb8604da1c5a611c5a2569fdd9cc90e06339538a"
+  version "4.4-20150728"
 
   bottle do
     cellar :any
-    sha256 "078701a392fbfa4ba14dffa613f393513d14310d7be37ad59545bc63f4350140" => :yosemite
-    sha256 "72318b626782997469a0cb47c793bd71b6e984d10feefbb829054f3d44dab361" => :mavericks
-    sha256 "247d68f89dc94312446d5fbd8aab5f58f46527c4b988959e331a9f32e122ffae" => :mountain_lion
+    sha256 "b11025b78347ee6fb889742421bb565df55634c29e5c86eda7999587462d7a60" => :el_capitan
+    sha256 "926ffaf0439792e21854d37bea69409eeb4cbb071da4e06ae6e0c41e7bc2141a" => :yosemite
+    sha256 "f22cef18da392b3b6c61d830e30d9156123b5b8474b51315dc46ff6aafbb002d" => :mavericks
   end
 
   # requires malloc features first introduced in Lion

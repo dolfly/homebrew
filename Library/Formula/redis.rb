@@ -1,13 +1,17 @@
 class Redis < Formula
+  desc "Persistent key-value database, with built-in net interface"
   homepage "http://redis.io/"
-  url "http://download.redis.io/releases/redis-3.0.0.tar.gz"
-  sha1 "c75fd32900187a7c9f9d07c412ea3b3315691c65"
+  url "http://download.redis.io/releases/redis-3.0.5.tar.gz"
+  sha256 "4c176826eee909fbdc63db1c15adc22aab42d758043829e556f4331e6a5bd480"
 
   bottle do
-    sha256 "9222eb768c9f165d35fa923b6ddaf57830928d5bf281b4d794aa14dd63fe5a04" => :yosemite
-    sha256 "283dd74ac65cc8a793144d732b51ec3d125e39172990f12dc7569dd107d25bf2" => :mavericks
-    sha256 "20c407d4ff095a40f3eb3980652adae13e75316c33526c34bd73be19a5df2dab" => :mountain_lion
+    cellar :any_skip_relocation
+    sha256 "8595573ce79c47a893458ef8edc7e1cea851e86f46bd3b3c8c02884bd04c74ef" => :el_capitan
+    sha256 "a3d223d04faaa36fc518c647a67e7ddd3f69c61ce475fbdb21385e0a42301ee2" => :yosemite
+    sha256 "f6a87a3679ef660cd129bbc337434a190b9c75411006701737eeb0ede80ac6c0" => :mavericks
   end
+
+  option "with-jemalloc", "Select jemalloc as memory allocator when building Redis"
 
   head "https://github.com/antirez/redis.git", :branch => "unstable"
 
@@ -20,7 +24,12 @@ class Redis < Formula
     # Architecture isn't detected correctly on 32bit Snow Leopard without help
     ENV["OBJARCH"] = "-arch #{MacOS.preferred_arch}"
 
-    system "make", "install", "PREFIX=#{prefix}", "CC=#{ENV.cc}"
+    args = %W[
+      PREFIX=#{prefix}
+      CC=#{ENV.cc}
+    ]
+    args << "MALLOC=jemalloc" if build.with? "jemalloc"
+    system "make", "install", *args
 
     %w[run db/redis log].each { |p| (var+p).mkpath }
 

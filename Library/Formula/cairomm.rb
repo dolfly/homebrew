@@ -1,35 +1,31 @@
 class Cairomm < Formula
+  desc "Vector graphics library with cross-device output support"
   homepage "http://cairographics.org/cairomm/"
-  url "http://cairographics.org/releases/cairomm-1.11.2.tar.gz"
-  sha256 "ccf677098c1e08e189add0bd146f78498109f202575491a82f1815b6bc28008d"
+  url "https://download.gnome.org/sources/cairomm/1.12/cairomm-1.12.0.tar.xz"
+  sha256 "a54ada8394a86182525c0762e6f50db6b9212a2109280d13ec6a0b29bfd1afe6"
 
   bottle do
-    sha256 "0de6d6e44c5e25a7c74cf8e7e0a57f96354603b57ef81550f2862cf44f2826d5" => :yosemite
-    sha256 "97daf82719e87af9df0788eb00d43035f66bebe87d385f100508de80d4e788da" => :mavericks
-    sha256 "0a706ff9d219ed40ee0bad185d34a060a46a38f60a68f65971a328b6afa0fd5d" => :mountain_lion
+    cellar :any
+    sha256 "b05ec638711634ad01ab1aec44eb9397e7a67278eaa5fefd16403b240a5261b0" => :el_capitan
+    sha256 "98648d8f66c07f55192908271f80233a78dfe65af96c6d8f06af209e30b3d980" => :yosemite
+    sha256 "960d0180b4e5137d56d8d2051e21fdcbcf23ebd18ff94fa03f0d39a20853b70d" => :mavericks
   end
 
-  option :cxx11
-
-  deprecated_option "without-x" => "without-x11"
+  needs :cxx11
 
   depends_on "pkg-config" => :build
-  if build.cxx11?
-    depends_on "libsigc++" => "c++11"
-  else
-    depends_on "libsigc++"
-  end
+  depends_on "libsigc++"
 
   depends_on "libpng"
   depends_on "cairo"
-  depends_on :x11 => :recommended
 
   def install
-    ENV.cxx11 if build.cxx11?
+    ENV.cxx11
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"
     system "make", "install"
   end
+
   test do
     (testpath/"test.cpp").write <<-EOS.undent
       #include <cairomm/cairomm.h>
@@ -41,7 +37,36 @@ class Cairomm < Formula
          return 0;
       }
     EOS
-    system ENV.cxx, "-I#{HOMEBREW_PREFIX}/include/cairomm-1.0", "-I#{HOMEBREW_PREFIX}/lib/cairomm-1.0/include", "-I#{HOMEBREW_PREFIX}/include/cairo", "-I#{HOMEBREW_PREFIX}/include/glib-2.0", "-I#{HOMEBREW_PREFIX}/lib/glib-2.0/include", "-I#{HOMEBREW_PREFIX}/opt/gettext/include", "-I#{HOMEBREW_PREFIX}/include/pixman-1", "-I#{HOMEBREW_PREFIX}/include", "-I#{HOMEBREW_PREFIX}/include/freetype2", "-I#{HOMEBREW_PREFIX}/include/libpng16", "-I#{HOMEBREW_PREFIX}/include/sigc++-2.0", "-I#{HOMEBREW_PREFIX}/lib/sigc++-2.0/include", "test.cpp", "-L#{HOMEBREW_PREFIX}/lib", "-L#{HOMEBREW_PREFIX}/lib", "-L#{HOMEBREW_PREFIX}/lib", "-lcairomm-1.0", "-lcairo", "-lsigc-2.0", "-o", "test"
+    cairo = Formula["cairo"]
+    fontconfig = Formula["fontconfig"]
+    freetype = Formula["freetype"]
+    gettext = Formula["gettext"]
+    glib = Formula["glib"]
+    libpng = Formula["libpng"]
+    libsigcxx = Formula["libsigc++"]
+    pixman = Formula["pixman"]
+    flags = (ENV.cflags || "").split + (ENV.cppflags || "").split + (ENV.ldflags || "").split
+    flags += %W[
+      -I#{cairo.opt_include}/cairo
+      -I#{fontconfig.opt_include}
+      -I#{freetype.opt_include}/freetype2
+      -I#{gettext.opt_include}
+      -I#{glib.opt_include}/glib-2.0
+      -I#{glib.opt_lib}/glib-2.0/include
+      -I#{include}/cairomm-1.0
+      -I#{libpng.opt_include}/libpng16
+      -I#{libsigcxx.opt_include}/sigc++-2.0
+      -I#{libsigcxx.opt_lib}/sigc++-2.0/include
+      -I#{lib}/cairomm-1.0/include
+      -I#{pixman.opt_include}/pixman-1
+      -L#{cairo.opt_lib}
+      -L#{libsigcxx.opt_lib}
+      -L#{lib}
+      -lcairo
+      -lcairomm-1.0
+      -lsigc-2.0
+    ]
+    system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test", *flags
     system "./test"
   end
 end

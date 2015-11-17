@@ -1,15 +1,14 @@
-require "formula"
-
 class Sassc < Formula
+  desc "Wrapper around libsass that helps to create command-line apps"
   homepage "https://github.com/sass/sassc"
-  url "https://github.com/sass/sassc.git", :tag => "3.2.1", :revision => "a88dd098143a1297d68a509f6dd99be25487197a"
+  url "https://github.com/sass/sassc.git", :tag => "3.2.5", :revision => "5d43e94f43f305dd6cc3381463976832b9ef6d98"
   head "https://github.com/sass/sassc.git"
 
   bottle do
     cellar :any
-    sha256 "79e88871dbd34e52b0514c389c70d3f357825b0e7f8189ed2e908b3a67884c52" => :yosemite
-    sha256 "959cf7e91788324518aebd82e0eee20742b58fd13a87a5d0ffef38c244b5cc96" => :mavericks
-    sha256 "0ce34ee21cb1c93321a785a30254880e812c3f3c65ce2a0f0ce2aded0d7ec283" => :mountain_lion
+    sha256 "44d23e1c74824b8f2f3f399411f3806f82f8405d6dbaf2fb4f028d8f064280b4" => :el_capitan
+    sha256 "ddeb5ad5fb637692cf56527a0b2e695c70875891294702cfe4f822faf89987f6" => :yosemite
+    sha256 "0675d030c8b99ce8a19e834fcc02e5ddfb0c0cfe9340c96778a16ee074563279" => :mavericks
   end
 
   depends_on "autoconf" => :build
@@ -34,7 +33,7 @@ class Sassc < Formula
       }
     EOS
 
-   assert_equal "div img{border:0px}",
-   shell_output("#{bin}/sassc --style compressed input.scss").strip
+    assert_equal "div img{border:0px}",
+    shell_output("#{bin}/sassc --style compressed input.scss").strip
   end
 end

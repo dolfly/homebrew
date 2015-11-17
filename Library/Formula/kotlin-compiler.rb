@@ -1,7 +1,11 @@
 class KotlinCompiler < Formula
-  homepage "http://kotlinlang.org/"
-  url "https://github.com/JetBrains/kotlin/releases/download/M11.1-bootstrap/kotlin-compiler-0.11.91.1.zip"
-  sha256 "5a68aa0f42d1e14f28fdcbf317d873fdbac1ef736934f7877fa26dac64377f64"
+  desc "Statically typed programming language for the JVM"
+  homepage "https://kotlinlang.org/"
+  url "https://github.com/JetBrains/kotlin/releases/download/build-1.0.0-beta-1103/kotlin-compiler-1.0.0-beta-1103.zip"
+  sha256 "7636819143d5c7332f5fa5c29c1b7701c861ae6541e02a1ccae10af6ac90c980"
+  version "1.0.0-beta-1103"
+
+  bottle :unneeded
 
   def install
     libexec.install %w[bin lib]

@@ -1,16 +1,18 @@
 class Libiomp < Formula
+  desc "Manage multiple threads in an OpenMP program as it executes"
   homepage "https://www.openmprtl.org/download"
-  url "https://www.openmprtl.org/sites/default/files/libomp_20150227_oss.tgz"
-  sha256 "a1d30fad0160400db325d270b632961d086026d2944520d67c6afc0e69ac93bf"
+  url "https://www.openmprtl.org/sites/default/files/libomp_20150701_oss.tgz"
+  sha256 "d0c1fcb5997c53e0c9ff4eec1de3392a21308731c06e6663f9d32ceb15f14e88"
 
   depends_on :arch => :intel
   depends_on "cmake" => :build
 
   bottle do
     cellar :any
-    sha256 "0b1100fbe25cdf739f60d85988c0f7f73d33a4a1e97de2b21e7f53258fd43a93" => :yosemite
-    sha256 "311132571f71ac5d06665cab765a683bba53c53438d07a59f1a143d8db211787" => :mavericks
-    sha256 "b26fa4413afcd9ae18743efd462d1d7e8541fe41fa52e4a864dbd845db5cbe42" => :mountain_lion
+    sha256 "a1efb5f1bec9148378059800496b12a21b138e8201ab249a86768c271478ac3d" => :el_capitan
+    sha256 "f2490f1e40a320426bcc1756cdfc875bfa04643edb0ee988537b6431c0ab4a57" => :yosemite
+    sha256 "cea20104475e6e430146d55a9d1d926402435a10a69ebd0ef994c36e4e33e233" => :mavericks
+    sha256 "6a45040d4af6ea384bee226ca99ab97857d60b717f19b8273b935c3ca43e3a19" => :mountain_lion
   end
 
   fails_with :gcc  do
@@ -30,10 +32,9 @@ class Libiomp < Formula
   def install
     intel_arch = MacOS.prefer_64_bit? ? "mac_32e" : "mac_32"
     args = std_cmake_args
-    args << (MacOS.prefer_64_bit? ? "-Darch=32e" : "-Darch=32")
-    args << "-DCMAKE_BUILD_TYPE=Release"
+    args << (MacOS.prefer_64_bit? ? "-DLIBOMP_ARCH=32e" : "-DLIBOMP_ARCH=32")
     system "cmake", ".", *args
-    system "make", "all", "common"
+    system "make", "all"
 
     (include/"libiomp").install Dir["exports/common/include/*"]
     lib.install "exports/#{intel_arch}/lib.thin/libiomp5.dylib"

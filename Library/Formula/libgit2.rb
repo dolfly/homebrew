@@ -1,26 +1,28 @@
 class Libgit2 < Formula
+  desc "C library of Git core methods that is re-entrant and linkable"
   homepage "https://libgit2.github.com/"
-  url "https://github.com/libgit2/libgit2/archive/v0.22.0.tar.gz"
-  sha1 "a37dc29511422eec9828e129ad057e77ca962c5e"
+  url "https://github.com/libgit2/libgit2/archive/v0.23.2.tar.gz"
+  sha256 "20c0a6ee92c0e19207dac6ddc336b4ae4a1c4ddf91be0891e4b6e6ccba16df0b"
   head "https://github.com/libgit2/libgit2.git"
-  revision 1
 
   bottle do
     cellar :any
-    sha256 "722c0d7fee0826e2534f43d71bd7f3df20b09802db53bbcdf1f3b72c073b888d" => :yosemite
-    sha256 "4ebcae368e74ebe396032744b5790e2af3ce37ec3035a852ba1ed08d9559fff5" => :mavericks
-    sha256 "d0a6034bc1dcabd209ca79727320cc64fe13f9b336ae51cc3cb8f9d62fd39d99" => :mountain_lion
+    sha256 "513f1f6dd6877fc7a3503d24638478d3aeacd9ba3256f5a33e39da3bf595390a" => :el_capitan
+    sha256 "74d933a78ac7345d427b205a2fd0390e70b039d1512f501d12801befc5c8d66b" => :yosemite
+    sha256 "9adb73739615d439375027d9afe05ba2c9dc40389bc62ee838f94340b55c383b" => :mavericks
   end
 
   option :universal
 
+  depends_on "pkg-config" => :build
   depends_on "cmake" => :build
   depends_on "libssh2" => :optional
-  depends_on "openssl"
+  depends_on "openssl" if MacOS.version <= :lion # Uses SecureTransport on >10.7
 
   def install
     args = std_cmake_args
     args << "-DBUILD_CLAR=NO" # Don't build tests.
+    args << "-DUSE_SSH=NO" if build.without? "libssh2"
 
     if build.universal?
       ENV.universal_binary
@@ -31,5 +33,26 @@ class Libgit2 < Formula
       system "cmake", "..", *args
       system "make", "install"
     end
+  end
+
+  test do
+    (testpath/"test.c").write <<-EOS.undent
+      #include <git2.h>
+
+      int main(int argc, char *argv[]) {
+        int options = git_libgit2_features();
+        return 0;
+      }
+    EOS
+    libssh2 = Formula["libssh2"]
+    flags = (ENV.cflags || "").split + (ENV.cppflags || "").split + (ENV.ldflags || "").split
+    flags += %W[
+      -I#{include}
+      -I#{libssh2.opt_include}
+      -L#{lib}
+      -lgit2
+    ]
+    system ENV.cc, "test.c", "-o", "test", *flags
+    system "./test"
   end
 end

@@ -1,14 +1,14 @@
 class Dpkg < Formula
+  desc "Debian package management system"
   homepage "https://wiki.debian.org/Teams/Dpkg"
-  url "https://mirrors.kernel.org/debian/pool/main/d/dpkg/dpkg_1.17.25.tar.xz"
-  mirror "http://ftp.debian.org/debian/pool/main/d/dpkg/dpkg_1.17.25.tar.xz"
-  sha256 "07019d38ae98fb107c79dbb3690cfadff877f153b8c4970e3a30d2e59aa66baa"
+  url "https://mirrors.ocf.berkeley.edu/debian/pool/main/d/dpkg/dpkg_1.18.3.tar.xz"
+  mirror "https://mirrorservice.org/sites/ftp.debian.org/debian/pool/main/d/dpkg/dpkg_1.18.3.tar.xz"
+  sha256 "a40ffe38d7f36d858a752189a306433cfc52c7d15d7b98f61d9f9dd49e0e4807"
 
   bottle do
-    revision 1
-    sha256 "deea5a4f7724157f3d3d7b2dada03a3e471f848bf73c6df3466fee323dc7b217" => :yosemite
-    sha256 "ddcbb73e71f0820c8ed798561800a31e216eeb1e2b97d2a2b2a564421158b27d" => :mavericks
-    sha256 "79b0c0358973d0514a17bb578000d1d302e232ae36fde4bfd5d02cd1a6923f49" => :mountain_lion
+    sha256 "a75ff82d4c12df36a0c14b3b0d0ffd3dd5a984141ee5148f83cfbb124e167e9f" => :el_capitan
+    sha256 "dfeb8b88f4802bffcdf5effa72602252bed2e9394c3e285b403beda9127ab024" => :yosemite
+    sha256 "03d0aa6f0c97835ca906134d0b0f555481e1fc3f03a6dfae88c27fb1c7451b54" => :mavericks
   end
 
   depends_on "pkg-config" => :build
@@ -16,13 +16,6 @@ class Dpkg < Formula
   depends_on "xz" # For LZMA
 
   def install
-    # Fix for OS X checksum utility names.
-    inreplace "scripts/Dpkg/Checksums.pm" do |s|
-      s.gsub! "md5sum", "md5"
-      s.gsub! "sha1sum", "shasum"
-      s.gsub! "sha256sum", "shasum', '-a', '256"
-    end
-
     # We need to specify a recent gnutar, otherwise various dpkg C programs will
     # use the system "tar", which will fail because it lacks certain switches.
     ENV["TAR"] = Formula["gnu-tar"].opt_bin/"gtar"

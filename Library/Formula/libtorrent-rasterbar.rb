@@ -1,22 +1,22 @@
-require "formula"
-
 class LibtorrentRasterbar < Formula
-  homepage "http://sourceforge.net/projects/libtorrent/"
-  url "https://downloads.sourceforge.net/project/libtorrent/libtorrent/libtorrent-rasterbar-1.0.4.tar.gz"
-  sha256 "1f567823133b1493b9717afc8334eed691bf0ab452d4a2e0f644989f13ce9db0"
-
-  head do
-    url "https://libtorrent.googlecode.com/svn/trunk"
-    depends_on "automake" => :build
-    depends_on "autoconf" => :build
-    depends_on "libtool" => :build
-  end
+  desc "C++ bittorrent library by Rasterbar Software"
+  homepage "http://www.libtorrent.org/"
+  url "https://github.com/arvidn/libtorrent/releases/download/libtorrent-1_0_6/libtorrent-rasterbar-1.0.6.tar.gz"
+  mirror "https://mirrors.kernel.org/debian/pool/main/libt/libtorrent-rasterbar/libtorrent-rasterbar_1.0.6.orig.tar.gz"
+  sha256 "c97de804b77f44591801631aca3869567671df2d3e2afe7f5453d8db2478fd61"
 
   bottle do
     cellar :any
-    sha256 "52f49857c787553ccd3439aeeba3988066bcabc4244d0a40a8220cc4e368d3e7" => :yosemite
-    sha256 "97e8fc6f9b4eaf89f1dd4988e7bf3d3c86f7a096c27b2cec7ef7460b43009153" => :mavericks
-    sha256 "c094fd6b5826e83b99ee71be5f075d2a44c81e33a2c6a480b5709ad696825aa2" => :mountain_lion
+    sha256 "ffffb9a24e44a90e9f1cc91d272ac82fef5f9f2df0fd11e9c257951f00de916e" => :yosemite
+    sha256 "5acb2f68de06a26e26f79c56c79933afdfb1dd8df6d98c365dc7827405e44d61" => :mavericks
+    sha256 "a8e66623af264107d46ce7b32bbec075fa5d5a93767183311675bb7f83f3b379" => :mountain_lion
+  end
+
+  head do
+    url "https://github.com/arvidn/libtorrent.git"
+    depends_on "automake" => :build
+    depends_on "autoconf" => :build
+    depends_on "libtool" => :build
   end
 
   depends_on "pkg-config" => :build
@@ -27,12 +27,12 @@ class LibtorrentRasterbar < Formula
   depends_on "boost-python" if build.with? "python"
 
   def install
-    args = [ "--disable-debug",
-             "--disable-dependency-tracking",
-             "--disable-silent-rules",
-             "--enable-encryption",
-             "--prefix=#{prefix}",
-             "--with-boost=#{Formula["boost"].opt_prefix}" ]
+    args = ["--disable-debug",
+            "--disable-dependency-tracking",
+            "--disable-silent-rules",
+            "--enable-encryption",
+            "--prefix=#{prefix}",
+            "--with-boost=#{Formula["boost"].opt_prefix}"]
 
     # Build python bindings requires forcing usage of the mt version of boost_python.
     if build.with? "python"
@@ -52,5 +52,14 @@ class LibtorrentRasterbar < Formula
     end
 
     system "make", "install"
+    libexec.install "examples"
+  end
+
+  test do
+    system ENV.cxx, "-L#{lib}", "-ltorrent-rasterbar",
+           "-I#{Formula["boost"].include}/boost", "-lboost_system",
+           libexec/"examples/make_torrent.cpp", "-o", "test"
+    system "./test", test_fixtures("test.mp3"), "-o", "test.torrent"
+    File.exist? testpath/"test.torrent"
   end
 end

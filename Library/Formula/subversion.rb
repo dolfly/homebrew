@@ -1,19 +1,14 @@
 class Subversion < Formula
+  desc "Version control system designed to be a better CVS"
   homepage "https://subversion.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=subversion/subversion-1.8.13.tar.bz2"
-  mirror "https://archive.apache.org/dist/subversion/subversion-1.8.13.tar.bz2"
-  sha256 "1099cc68840753b48aedb3a27ebd1e2afbcc84ddb871412e5d500e843d607579"
+  url "https://www.apache.org/dyn/closer.cgi?path=subversion/subversion-1.9.2.tar.bz2"
+  mirror "https://archive.apache.org/dist/subversion/subversion-1.9.2.tar.bz2"
+  sha256 "023da881139b4514647b6f8a830a244071034efcaad8c8e98c6b92393122b4eb"
 
   bottle do
-    sha256 "9632818ed972becd8702af08042218bd3faa723ef4812b6d85ec974a8647782f" => :yosemite
-    sha256 "1c9f5997edda6bd034ed9ad85f060b0e1c298ee9c208f881ff89c1d772baa776" => :mavericks
-    sha256 "f79ca1f3377fa0a0c2550085a48dd03dbabe493c8af08531ebe61710f54f9d1e" => :mountain_lion
-  end
-
-  devel do
-    url "https://www.apache.org/dyn/closer.cgi?path=subversion/subversion-1.9.0-beta1.tar.bz2"
-    mirror "https://archive.apache.org/dist/subversion/subversion-1.9.0-beta1.tar.bz2"
-    sha256 "39f0fa6f25fde04639496a5cacd60d8adac7f1e40c6c237a4356ad357449c775"
+    sha256 "1e3a2f9869e0448729f57457637559ee5608abade9d1889eba53e5521087ca3a" => :el_capitan
+    sha256 "858125c5c91abf8f6462cd0265d7a5ff1303c9b5284bbbe522927c5d9568344d" => :yosemite
+    sha256 "d299df9587548280cd4065e408f269e84c0bd51d727aefa9b5084a17a228c495" => :mavericks
   end
 
   deprecated_option "java" => "with-java"
@@ -51,6 +46,7 @@ class Subversion < Formula
 
   # Fix #23993 by stripping flags swig can't handle from SWIG_CPPFLAGS
   # Prevent "-arch ppc" from being pulled in from Perl's $Config{ccflags}
+  # Prevent linking into a Python Framework
   patch :DATA
 
   if build.with?("perl") || build.with?("ruby")
@@ -94,7 +90,7 @@ class Subversion < Formula
     end
 
     if build.include? "unicode-path"
-      fail <<-EOS.undent
+      raise <<-EOS.undent
         The --unicode-path patch is not supported on Subversion 1.8.
 
         Upgrading from a 1.7 version built with this patch is not supported.
@@ -152,6 +148,13 @@ class Subversion < Formula
       args << "RUBY=/usr/bin/ruby"
     end
 
+    # If Python is built universally, then extensions built with that Python
+    # are too. This default behaviour is not desired when building an extension
+    # for a single architecture.
+    if build.with?("python") && (which "python").universal? && !build.universal?
+      ENV["ARCHFLAGS"] = "-arch #{MacOS.preferred_arch}"
+    end
+
     # The system Python is built with llvm-gcc, so we override this
     # variable to prevent failures due to incompatible CFLAGS
     ENV["ac_cv_python_compile"] = ENV.cc
@@ -171,6 +174,7 @@ class Subversion < Formula
     if build.with? "python"
       system "make", "swig-py"
       system "make", "install-swig-py"
+      (lib/"python2.7/site-packages").install_symlink Dir["#{lib}/svn-python/*"]
     end
 
     if build.with? "perl"
@@ -215,11 +219,6 @@ class Subversion < Formula
     end
   end
 
-  test do
-    system "#{bin}/svnadmin", "create", "test"
-    system "#{bin}/svnadmin", "verify", "test"
-  end
-
   def caveats
     s = <<-EOS.undent
       svntools have been installed to:
@@ -252,6 +251,11 @@ class Subversion < Formula
     end
 
     s
+  end
+
+  test do
+    system "#{bin}/svnadmin", "create", "test"
+    system "#{bin}/svnadmin", "verify", "test"
   end
 end
 
@@ -288,3 +292,17 @@ index a60430b..bd9b017 100644
      INC  => join(' ', $includes, $cppflags,
                   " -I$swig_srcdir/perl/libsvn_swig_perl",
                   " -I$svnlib_srcdir/include",
+
+diff --git a/build/get-py-info.py b/build/get-py-info.py
+index 29a6c0a..dd1a5a8 100644
+--- a/build/get-py-info.py
++++ b/build/get-py-info.py
+@@ -83,7 +83,7 @@ def link_options():
+   options = sysconfig.get_config_var('LDSHARED').split()
+   fwdir = sysconfig.get_config_var('PYTHONFRAMEWORKDIR')
+
+-  if fwdir and fwdir != "no-framework":
++  if fwdir and fwdir != "no-framework" and sys.platform != 'darwin':
+
+     # Setup the framework prefix
+     fwprefix = sysconfig.get_config_var('PYTHONFRAMEWORKPREFIX')

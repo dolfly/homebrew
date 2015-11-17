@@ -1,15 +1,15 @@
-require "formula"
-
 class Sslmate < Formula
+  desc "Buy SSL certs from the command-line"
   homepage "https://sslmate.com"
-  url "https://packages.sslmate.com/other/sslmate-1.0.0.tar.gz"
-  sha256 "87fbbaeb38d07d5732533b9391846e7e55e0f1f3766d0ef7919f0d22840df71e"
+  url "https://packages.sslmate.com/other/sslmate-1.5.0.tar.gz"
+  sha256 "8ff98393de04d18b1b0b36dec3dd9adb48ba253278431d4de48a70ce9b9fadef"
 
   bottle do
-    cellar :any
-    sha256 "180aa500c33b5d7ecc951b1dc7a319f8679630d2d3b5f99aeb15645568075bff" => :yosemite
-    sha256 "3bdad9e0e103af6a3a0177a9407abec6eec7bba234425b493d1c2ddd6bcd972b" => :mavericks
-    sha256 "5bdf1a73b66e6456aa8aaaf3f8cc88213f795122d0e12ad02228029261417803" => :mountain_lion
+    cellar :any_skip_relocation
+    revision 1
+    sha256 "1e2a6b7dc2d1af9d02b659b08c18af42d3bdd1568c7cc56c539140996b1c42ad" => :el_capitan
+    sha256 "2c9d8f4decd35035d7c574e3755d3fb6466ac78440dbadf239f85315698fc687" => :yosemite
+    sha256 "c03aa55a8218846950612d7f1a41aa356ec7d66bcaf9e74c3c3e2f38d7c6f672" => :mavericks
   end
 
   option "without-route53", "Disable support for Route 53 DNS approval"
@@ -19,23 +19,23 @@ class Sslmate < Formula
     depends_on "curl"
 
     resource "URI" do
-      url "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/URI-1.64.tar.gz"
-      mirror "http://search.mcpan.org/CPAN/authors/id/E/ET/ETHER/URI-1.64.tar.gz"
-      sha1 "80b43be09119f65f87ac3ab947c1e1cf0e0d0a8a"
+      url "https://cpan.metacpan.org/authors/id/E/ET/ETHER/URI-1.67.tar.gz"
+      mirror "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/URI-1.67.tar.gz"
+      sha256 "ab7f5fbc80da4ed9c46d63ed956c68a09e83dae30f20c2778c3e056d41883f9d"
     end
 
     resource "Term::ReadKey" do
-      url "http://search.cpan.org/CPAN/authors/id/J/JS/JSTOWE/TermReadKey-2.32.tar.gz"
-      mirror "http://search.mcpan.org/CPAN/authors/id/J/JS/JSTOWE/TermReadKey-2.32.tar.gz"
-      sha1 "0aef1009fca526d3a2ee4336584ff4cd69c2396e"
+      url "https://cpan.metacpan.org/authors/id/J/JS/JSTOWE/TermReadKey-2.32.tar.gz"
+      mirror "http://search.cpan.org/CPAN/authors/id/J/JS/JSTOWE/TermReadKey-2.32.tar.gz"
+      sha256 "58b90e8908e686d03a161590c1dd870e8a1b005715ca8e6d5080a32459e1e9f8"
     end
   end
 
   if MacOS.version <= :mountain_lion
     resource "JSON::PP" do
-      url "http://search.cpan.org/CPAN/authors/id/M/MA/MAKAMAKA/JSON-PP-2.27300.tar.gz"
-      mirror "http://search.mcpan.org/CPAN/authors/id/M/MA/MAKAMAKA/JSON-PP-2.27300.tar.gz"
-      sha1 "21aea2dbed9507b9f62c5748893fc5431c715754"
+      url "https://cpan.metacpan.org/authors/id/M/MA/MAKAMAKA/JSON-PP-2.27300.tar.gz"
+      mirror "http://search.cpan.org/CPAN/authors/id/M/MA/MAKAMAKA/JSON-PP-2.27300.tar.gz"
+      sha256 "5feef3067be4acd99ca0ebb29cf1ac1cdb338fe46977585bd1e473ea4bab71a3"
     end
   end
 
@@ -43,8 +43,8 @@ class Sslmate < Formula
     depends_on :python if MacOS.version <= :snow_leopard
 
     resource "boto" do
-      url "https://pypi.python.org/packages/source/b/boto/boto-2.34.0.tar.gz"
-      sha1 "e19d252b58054a7711fae910324e26b2b551a44d"
+      url "https://pypi.python.org/packages/source/b/boto/boto-2.38.0.tar.gz"
+      sha256 "d9083f91e21df850c813b38358dc83df16d7f253180a1344ecfedce24213ecf2"
     end
   end
 

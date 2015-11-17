@@ -3,26 +3,24 @@ require "language/haskell"
 class Pandoc < Formula
   include Language::Haskell::Cabal
 
+  desc "Swiss-army knife of markup format conversion"
   homepage "http://pandoc.org"
-  url "https://hackage.haskell.org/package/pandoc-1.13.2.1/pandoc-1.13.2.1.tar.gz"
-  sha256 "66da6eb690b8de41eccf05620e165630854d74c08cf69dbfb68d0ea84589785f"
+  url "https://hackage.haskell.org/package/pandoc-1.15.2/pandoc-1.15.2.tar.gz"
+  sha256 "9c6ffe77006513306b35daa7256c1625c6eaf2e16a8de8fe5248f20015c3d335"
 
   head "https://github.com/jgm/pandoc.git"
 
   bottle do
-    sha256 "e9df02321a7129c78dec25d350730cd6e9197d31ef96c800f6462535c9411749" => :yosemite
-    sha256 "471cbe82c36664f90d43736c2169048cf2735b21895a6da936cf46620b963444" => :mavericks
-    sha256 "0fa5678764cea7319f9f09bca10e2413157f0310ac2067efc9d3d7cd6c02195a" => :mountain_lion
+    sha256 "7dc47fef5bf0998f47b46c942541e6682c02b4784666a0ecca1821b2a3ffdac7" => :el_capitan
+    sha256 "d56d08a75e2fc7492b2a38f028e2ca123673319c1480efab5d7cfa6dad016fde" => :yosemite
+    sha256 "498a9ea32ca532cb3dc2257ae10b19d9169c21a54b354ea77c329fcffd3c6409" => :mavericks
   end
 
   depends_on "ghc" => :build
   depends_on "cabal-install" => :build
   depends_on "gmp"
 
-  fails_with :clang do
-    build 425
-    cause "clang segfaults on Lion"
-  end
+  setup_ghc_compilers
 
   def install
     cabal_sandbox do
@@ -30,10 +28,19 @@ class Pandoc < Formula
       cabal_install "--prefix=#{prefix}"
     end
     cabal_clean_lib
+    (bash_completion/"pandoc").write `#{bin}/pandoc --bash-completion`
   end
 
   test do
-    system "pandoc", "-o", testpath/"output.html", prefix/"README"
-    assert (testpath/"output.html").read.include? '<h1 id="synopsis">Synopsis</h1>'
+    input_markdown = <<-EOS.undent
+      # Homebrew
+
+      A package manager for humans. Cats should take a look at Tigerbrew.
+    EOS
+    expected_html = <<-EOS.undent
+      <h1 id="homebrew">Homebrew</h1>
+      <p>A package manager for humans. Cats should take a look at Tigerbrew.</p>
+    EOS
+    assert_equal expected_html, pipe_output("#{bin}/pandoc -f markdown -t html5", input_markdown)
   end
 end

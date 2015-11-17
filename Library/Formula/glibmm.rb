@@ -1,22 +1,28 @@
 class Glibmm < Formula
+  desc "C++ interface to glib"
   homepage "http://www.gtkmm.org/"
-  url "https://download.gnome.org/sources/glibmm/2.44/glibmm-2.44.0.tar.xz"
-  sha256 "1b0ac0425d24895507c0e0e8088a464c7ae2d289c47afa1c11f63278fc672ea8"
+  url "https://download.gnome.org/sources/glibmm/2.46/glibmm-2.46.1.tar.xz"
+  sha256 "9647e596c1081d2ea202bd3da2824ec2ea359498fa86eb59a55b1b307dd8c4aa"
 
   bottle do
-    sha256 "441a1090b234db948a47ca1996dfab13c9d28d7ddbee74611ffd443c6088dca6" => :yosemite
-    sha256 "dc82204feb11ee31c04500c5a2327a42db838fb7e9c8ceeb0b9f0eb605dbaa76" => :mavericks
-    sha256 "53810b3d4d76b685fc9195be3162d73f973dea0596f3630724f3af049830458a" => :mountain_lion
+    cellar :any
+    sha256 "906327e1af5daccc547fc0a256d6f13bd524604e7769dd8c3a3dd0b74d23c851" => :el_capitan
+    sha256 "0b253dbccc04c0f2fb1eebb99f2fc3a343782d0de92dbc403c17f14737968c07" => :yosemite
+    sha256 "e6a2de7475d7d0fd494511a9eebcc5046caa3aa31f15c4941df5624ff977a74f" => :mavericks
   end
 
   depends_on "pkg-config" => :build
   depends_on "libsigc++"
   depends_on "glib"
 
+  needs :cxx11
+
   def install
+    ENV.cxx11
     system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
     system "make", "install"
   end
+
   test do
     (testpath/"test.cpp").write <<-EOS.undent
       #include <glibmm.h>
@@ -27,7 +33,29 @@ class Glibmm < Formula
          return 0;
       }
     EOS
-    system ENV.cxx, "-I#{HOMEBREW_PREFIX}/include/glibmm-2.4", "-I#{HOMEBREW_PREFIX}/lib/glibmm-2.4/include", "-I#{HOMEBREW_PREFIX}/include/glib-2.0", "-I#{HOMEBREW_PREFIX}/lib/glib-2.0/include", "-I#{HOMEBREW_PREFIX}/opt/gettext/include", "-I#{HOMEBREW_PREFIX}/include/sigc++-2.0", "-I#{HOMEBREW_PREFIX}/lib/sigc++-2.0/include", "test.cpp", "-L#{HOMEBREW_PREFIX}/lib", "-L#{HOMEBREW_PREFIX}/lib", "-L#{HOMEBREW_PREFIX}/opt/gettext/lib", "-L#{HOMEBREW_PREFIX}/lib", "-lglibmm-2.4", "-lgobject-2.0", "-lglib-2.0", "-lintl", "-lsigc-2.0", "-o", "test"
+    gettext = Formula["gettext"]
+    glib = Formula["glib"]
+    libsigcxx = Formula["libsigc++"]
+    flags = (ENV.cflags || "").split + (ENV.cppflags || "").split + (ENV.ldflags || "").split
+    flags += %W[
+      -I#{gettext.opt_include}
+      -I#{glib.opt_include}/glib-2.0
+      -I#{glib.opt_lib}/glib-2.0/include
+      -I#{include}/glibmm-2.4
+      -I#{libsigcxx.opt_include}/sigc++-2.0
+      -I#{libsigcxx.opt_lib}/sigc++-2.0/include
+      -I#{lib}/glibmm-2.4/include
+      -L#{gettext.opt_lib}
+      -L#{glib.opt_lib}
+      -L#{libsigcxx.opt_lib}
+      -L#{lib}
+      -lglib-2.0
+      -lglibmm-2.4
+      -lgobject-2.0
+      -lintl
+      -lsigc-2.0
+    ]
+    system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test", *flags
     system "./test"
   end
 end

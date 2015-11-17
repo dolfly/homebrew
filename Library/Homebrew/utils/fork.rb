@@ -2,7 +2,7 @@ require "fcntl"
 require "socket"
 
 module Utils
-  def self.safe_fork(&block)
+  def self.safe_fork(&_block)
     Dir.mktmpdir("homebrew", HOMEBREW_TEMP) do |tmpdir|
       UNIXServer.open("#{tmpdir}/socket") do |server|
         read, write = IO.pipe
@@ -30,12 +30,13 @@ module Utils
             retry unless Process.waitpid(pid, Process::WNOHANG)
           else
             socket.send_io(write)
+            socket.close
           end
           write.close
           data = read.read
           read.close
           Process.wait(pid) unless socket.nil?
-          raise Marshal.load(data) unless data.nil? or data.empty?
+          raise Marshal.load(data) unless data.nil? || data.empty?
           raise Interrupt if $?.exitstatus == 130
           raise "Suspicious failure" unless $?.success?
         end

@@ -1,13 +1,14 @@
 class JenkinsJobBuilder < Formula
+  desc "Configure Jenkins jobs with YAML files stored in Git"
   homepage "http://ci.openstack.org/jjb.html"
-  url "https://pypi.python.org/packages/source/j/jenkins-job-builder/jenkins-job-builder-1.1.0.tar.gz"
-  sha256 "4176a06efec3985823245a460e93fd678d78250defcc9f3109beb58aff34e609"
+  url "https://pypi.python.org/packages/source/j/jenkins-job-builder/jenkins-job-builder-1.3.0.tar.gz"
+  sha256 "dd74dc9673c1f18e41ccd83d6d78b21409375bc84981881bab62fd0f8dbb3b84"
 
   bottle do
     cellar :any
-    sha256 "2d2202bfb2b3d211531ebc9c953b56a41c4a79848f80f5368e5c293d5a86de3a" => :yosemite
-    sha256 "4bfee71dff0c10d2847babf2567ef529a0db2b28d18cee34713ac7b40429b166" => :mavericks
-    sha256 "d83cbc28b1fe07b0d2f02d1a391dea5b279e86cc5353b3054d6621bb1457956d" => :mountain_lion
+    sha256 "9e9619dbd6123e278cb939649ec874b7b6784c6c2a6e921367e2bb0d140c24cb" => :yosemite
+    sha256 "0ebaeea8fe2d464b9f26fe7b6064e62a2d5e81d39e22a1090c4a317ff6fb5477" => :mavericks
+    sha256 "e6a4404578fb17990d288758013e50e64e31306c74091eb7f79a3d1a4cd2b893" => :mountain_lion
   end
 
   depends_on :python if MacOS.version <= :snow_leopard
@@ -28,13 +29,13 @@ class JenkinsJobBuilder < Formula
   end
 
   resource "python-jenkins" do
-    url "https://pypi.python.org/packages/source/p/python-jenkins/python-jenkins-0.4.5.tar.gz"
-    sha256 "e69949ff81064b17bf9f82f89ce511b4c19a8ddd0a69c180494278905e86e85b"
+    url "https://pypi.python.org/packages/source/p/python-jenkins/python-jenkins-0.4.8.tar.gz"
+    sha256 "ec33a1b6d1b74350d84ccff05cf41d4fb2677fc63bac8a471db5038c67fcdd93"
   end
 
   resource "pbr" do
-    url "https://pypi.python.org/packages/source/p/pbr/pbr-0.10.8.tar.gz"
-    sha256 "a741650c697abe9dd3da00039a57a45a15a6eed017a16f6b7e4c0161fae2b4b2"
+    url "https://pypi.python.org/packages/source/p/pbr/pbr-1.6.0.tar.gz"
+    sha256 "4eaee8ff5544703edd1951ed1dc0b283da99a74f740d9f9055eeefcf329de1d1"
   end
 
   resource "six" do
@@ -43,8 +44,8 @@ class JenkinsJobBuilder < Formula
   end
 
   resource "pip" do
-    url "https://pypi.python.org/packages/source/p/pip/pip-6.0.8.tar.gz"
-    sha256 "0d58487a1b7f5be2e5e965c11afbea1dc44ecec8069de03491a4d0d6c85f4551"
+    url "https://pypi.python.org/packages/source/p/pip/pip-7.1.2.tar.gz"
+    sha256 "ca047986f0528cfa975a14fb9f7f106271d4e0c3fe1ddced6c1db2e7ae57a477"
   end
 
   def install
